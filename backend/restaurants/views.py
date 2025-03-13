@@ -1,49 +1,86 @@
-from rest_framework.views import APIView
+from rest_framework import generics, permissions
 from rest_framework.response import Response
-from datetime import datetime, timedelta
-from django.db.models import Count, F
-from .models import BookingSlot, Restaurant
-from .serializers import RestaurantSerializer
+from rest_framework import status
+from django.shortcuts import get_object_or_404
+from .models import Restaurant, RestaurantHours, RestaurantPhoto
+from .serializers import RestaurantSerializer, RestaurantHoursSerializer, RestaurantPhotoSerializer
+from users.models import User
 
-class SearchRestaurantsView(APIView):
-    def get(self, request):
-        date_str = request.query_params.get('date')  # e.g., '2023-10-01'
-        time_str = request.query_params.get('time')  # e.g., '18:00'
-        number_of_people = int(request.query_params.get('number_of_people', 1))
-        city = request.query_params.get('city')
-        state = request.query_params.get('state')
-        zip_code = request.query_params.get('zip')
+# Custom permission to restrict access to RestaurantManagers
+class IsRestaurantManager(permissions.BasePermission):
+    def has_permission(self, request, view):
+        return request.user.is_authenticated and request.user.role == 'RestaurantManager'
 
-        date = datetime.strptime(date_str, '%Y-%m-%d').date()
-        time = datetime.strptime(time_str, '%H:%M').time()
-        datetime_start = datetime.combine(date, time) - timedelta(minutes=30)
-        datetime_end = datetime.combine(date, time) + timedelta(minutes=30)
+# Restaurant Views
+class RestaurantListCreateView(generics.ListCreateAPIView):
+    queryset = Restaurant.objects.all()
+    serializer_class = RestaurantSerializer
 
-        available_slots = BookingSlot.objects.filter(
-            slot_datetime__range=(datetime_start, datetime_end),
-            table_size__gte=number_of_people,
-            restaurant__approved=True
-        ).annotate(
-            booking_count=Count('bookings')
-        ).filter(
-            booking_count__lt=F('total_tables')
-        )
+    def get_permissions(self):
+        if self.request.method == 'POST':
+            # Only RestaurantManagers can create restaurants
+            return [permissions.IsAuthenticated(), IsRestaurantManager()]
+        # Anyone can list restaurants (e.g., Customers searching)
+        return [permissions.AllowAny()]
 
-        if city:
-            available_slots = available_slots.filter(restaurant__city=city)
-        if state:
-            available_slots = available_slots.filter(restaurant__state=state)
-        if zip_code:
-            available_slots = available_slots.filter(restaurant__zip_code=zip_code)
+    def perform_create(self, serializer):
+        # Automatically set the manager_id to the authenticated user
+        serializer.save(manager_id=self.request.user)
 
-        restaurants = Restaurant.objects.filter(booking_slots__in=available_slots).distinct()
+class RestaurantDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Restaurant.objects.all()
+    serializer_class = RestaurantSerializer
 
-        available_times = {}
-        for slot in available_slots:
-            restaurant_id = slot.restaurant_id
-            if restaurant_id not in available_times:
-                available_times[restaurant_id] = []
-            available_times[restaurant_id].append(slot.slot_datetime.strftime('%Y-%m-%d %H:%M'))
+    def get_permissions(self):
+        if self.request.method in ['PUT', 'PATCH', 'DELETE']:
+            # Only the RestaurantManager who owns it can update/delete
+            return [permissions.IsAuthenticated(), IsRestaurantManager()]
+        # Anyone can view details
+        return [permissions.AllowAny()]
 
-        serializer = RestaurantSerializer(restaurants, many=True, context={'available_times': available_times})
-        return Response(serializer.data)
+    def get_queryset(self):
+        # Restrict updates/deletes to the manager's own restaurants
+        if self.request.method in ['PUT', 'PATCH', 'DELETE']:
+            return Restaurant.objects.filter(manager_id=self.request.user)
+        return Restaurant.objects.all()
+
+# RestaurantHours Views
+class RestaurantHoursListCreateView(generics.ListCreateAPIView):
+    serializer_class = RestaurantHoursSerializer
+    permission_classes = [permissions.IsAuthenticated, IsRestaurantManager]
+
+    def get_queryset(self):
+        # Only show hours for restaurants managed by the user
+        return RestaurantHours.objects.filter(restaurant_id__manager_id=self.request.user)
+
+    def perform_create(self, serializer):
+        restaurant_id = self.request.data.get('restaurant_id')
+        restaurant = get_object_or_404(Restaurant, restaurant_id=restaurant_id, manager_id=self.request.user)
+        serializer.save(restaurant_id=restaurant)
+
+class RestaurantHoursDetailView(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = RestaurantHoursSerializer
+    permission_classes = [permissions.IsAuthenticated, IsRestaurantManager]
+
+    def get_queryset(self):
+        return RestaurantHours.objects.filter(restaurant_id__manager_id=self.request.user)
+
+# RestaurantPhoto Views
+class RestaurantPhotoListCreateView(generics.ListCreateAPIView):
+    serializer_class = RestaurantPhotoSerializer
+    permission_classes = [permissions.IsAuthenticated, IsRestaurantManager]
+
+    def get_queryset(self):
+        return RestaurantPhoto.objects.filter(restaurant_id__manager_id=self.request.user)
+
+    def perform_create(self, serializer):
+        restaurant_id = self.request.data.get('restaurant_id')
+        restaurant = get_object_or_404(Restaurant, restaurant_id=restaurant_id, manager_id=self.request.user)
+        serializer.save(restaurant_id=restaurant)
+
+class RestaurantPhotoDetailView(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = RestaurantPhotoSerializer
+    permission_classes = [permissions.IsAuthenticated, IsRestaurantManager]
+
+    def get_queryset(self):
+        return RestaurantPhoto.objects.filter(restaurant_id__manager_id=self.request.user)
