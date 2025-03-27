@@ -4,7 +4,7 @@
 
 import { Calendar as CalendarIcon, ChevronDown } from 'lucide-react';
 import { format } from 'date-fns';
-import { Calendar } from '@/components/ui/calendar';
+import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 
@@ -22,6 +22,7 @@ const DateSelector = ({  searchState, setSearchState }: { searchState: SearchSta
   // Handle date selection
   
   const handleDateSelect = (date: Date | undefined) => {
+    console.log("Hello")
     if (!date) return;
     setSearchState({
       ...searchState,
@@ -45,13 +46,14 @@ const DateSelector = ({  searchState, setSearchState }: { searchState: SearchSta
         </PopoverTrigger>
         <PopoverContent className="p-0 bg-slate-800 border border-slate-700 flex justify-center w-full">
           <Calendar
-            mode="single"
+           mode="single"
             // onSelect={(date) => handleDateSelect(date)}
             selected={searchState.date}
             onSelect={handleDateSelect}
             initialFocus
-            className="bg-slate-900 text-slate-100 m-0"
+            className="bg-slate-900 text-slate-100 m-0 "
           />
+          
         </PopoverContent>
       </Popover>
     </div>
