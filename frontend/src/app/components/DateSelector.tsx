@@ -49,8 +49,8 @@ const DateSelector = ({  searchState, setSearchState }: { searchState: SearchSta
             // onSelect={(date) => handleDateSelect(date)}
             selected={searchState.date}
             onSelect={handleDateSelect}
-            initialFocus
-            className="bg-slate-900 text-slate-100 m-0"
+            autoFocus
+            className="bg-slate-900 text-slate-100 m-0 "
           />
         </PopoverContent>
       </Popover>
