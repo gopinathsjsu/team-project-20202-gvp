@@ -28,7 +28,6 @@ class User(AbstractBaseUser, PermissionsMixin):
     user_id = models.AutoField(primary_key=True)
     username = models.CharField(max_length=100, unique=True)
     email = models.EmailField(max_length=255, unique=True)
-    password_hash = models.CharField(max_length=255)  # Will be handled by set_password
     role = models.CharField(max_length=50, choices=ROLES)
     phone = models.CharField(max_length=20, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)

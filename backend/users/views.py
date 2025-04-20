@@ -5,12 +5,13 @@ from .serializers import UserSerializer
 from .models import User
 from django.contrib.auth.hashers import make_password
 from rest_framework.permissions import AllowAny
+from rest_framework_simplejwt.tokens import RefreshToken
 
 class RegisterView(APIView):
     permission_classes = [AllowAny] 
     def post(self, request):
         data = request.data
-        data['password_hash'] = make_password(data['password'])
+        data['password'] = make_password(data['password'])
         serializer = UserSerializer(data=data)
         if serializer.is_valid():
             serializer.save()
@@ -31,6 +32,15 @@ class LoginView(APIView):
         
         if user.check_password(password):
             serializer = UserSerializer(user)
-            return Response(serializer.data, status=status.HTTP_200_OK)
+            # Generate JWT tokens
+            refresh = RefreshToken.for_user(user)
+            
+            return Response({
+                'user': serializer.data,
+                'tokens': {
+                    'access': str(refresh.access_token),
+                    'refresh': str(refresh)
+                }
+            }, status=status.HTTP_200_OK)
         else:
             return Response({'error': 'Invalid username or password'}, status=status.HTTP_400_BAD_REQUEST)
