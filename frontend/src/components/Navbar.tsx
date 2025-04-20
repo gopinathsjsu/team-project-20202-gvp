@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Search, Users, MapPin, ChevronDown } from "lucide-react";
 import Link from "next/link";
-import DateSelector from "./DateSelector";
+import DateSelector from "./ui/DateSelector";
 import { usePathname } from "next/navigation";
 
 interface SearchState {
@@ -15,13 +15,13 @@ interface SearchState {
 }
 
 const Navbar = () => {
-  const [location, setLocation] = useState("San Jose");
+
   const pathname = usePathname();
   const currentPage = pathname.split("/").pop();
   console.log(currentPage);
 
   const [searchState, setSearchState] = useState<SearchState>({
-    location: "San Jose",
+    location: "Get your location",
     date: new Date(),
     time: "7:00 PM",
     people: 2,
@@ -36,6 +36,45 @@ const Navbar = () => {
       people: count,
     });
     setIsPeopleDropdownOpen(false);
+  };
+
+  const searchForLocation = () => {
+    // Implement location search functionality
+    console.log("Searching for location:", searchState.location);
+    // Get user's location and update the location city
+    const getUserLocation = () => {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          async (position) => {
+            const { latitude, longitude } = position.coords;
+            try {
+              // Use reverse geocoding to get city name from coordinates
+              const response = await fetch(
+                `https://api.geoapify.com/v1/geocode/reverse?lat=${latitude}&lon=${longitude}&apiKey=3845a5ac396a425f8c19040c1af2b9ab`
+              );
+              const data = await response.json();
+              if (data.features && data.features.length > 0) {
+                const city = data.features[0].properties.city || data.features[0].properties.town;
+                console.log(city)
+                if (city) {
+                  setSearchState({
+                    ...searchState,
+                    location: city
+                  });
+                }
+              }
+            } catch (error) {
+              console.error("Error getting location:", error);
+            }
+          },
+          (error) => {
+            console.error("Error getting geolocation:", error);
+          }
+        );
+      }
+    };
+    
+    getUserLocation();
   };
 
   const peopleOptions = Array.from({ length: 15 }, (_, i) => i + 1);
@@ -56,11 +95,11 @@ const Navbar = () => {
           </Link>
 
           <button
-            className="flex items-center text-slate-300 hover:text-slate-400"
-            onClick={() => setLocation("New Location")}
+            className="flex items-center text-slate-300 hover:text-slate-400 cursor-pointer"
+            onClick={() => searchForLocation()}
           >
-            <MapPin className="w-4 h-4 mr-1" />
-            <span>{location}</span>
+            <MapPin className="w-4 h-4 mr-1 " />
+            <span>{searchState.location}</span>
             <ChevronDown className="w-4 h-4 ml-1" />
           </button>
         </div>
@@ -69,14 +108,11 @@ const Navbar = () => {
         <div className="flex items-center space-x-2">
           {currentPage === "" && (
             <Link href="/login">
-              <button className="px-4 py-2 text-slate-100 hover:text-slate-200 hover:cursor-pointer">
+              <button className="px-4 py-2 text-slate-100 hover:text-slate-200 cursor-pointer">
                 Sign in
               </button>
             </Link>
           )}
-          <button className="p-2" aria-label="Search">
-            <Search className="w-5 h-5 text-slate-100 hover:text-slate-200" />
-          </button>
         </div>
       </div>
 
@@ -150,7 +186,7 @@ const Navbar = () => {
             </div>
 
             <div className="mt-3 text-sm text-slate-400 flex justify-center sm:justify-start items-center">
-              <span>It looks like you are in {location}. Not correct?</span>
+              <span>It looks like you are in {searchState.location}. Not correct?</span>
               <button className="flex items-center ml-2 text-slate-500 hover:text-slate-400">
                 <MapPin className="w-4 h-4 mr-1" />
                 Get current location
