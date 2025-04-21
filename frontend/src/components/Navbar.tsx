@@ -1,32 +1,20 @@
 // components/Navbar.tsx
 "use client";
 import { useState } from "react";
-import { Search, Users, MapPin, ChevronDown } from "lucide-react";
+import { Search, Users, MapPin, ChevronDown, LogOut, User } from "lucide-react";
 import Link from "next/link";
 import DateSelector from "./ui/DateSelector";
 import { usePathname } from "next/navigation";
-
-interface SearchState {
-  location: string;
-  date: Date;
-  time: string;
-  people: number;
-  searchQuery: string;
-}
+import { useAuth } from "@/context/AuthContext";
+import {useRestaurant} from "@/context/RestaurantContext";
 
 const Navbar = () => {
-
+  const { user, isAuthenticated, logout } = useAuth();
   const pathname = usePathname();
   const currentPage = pathname.split("/").pop();
-  console.log(currentPage);
+  // console.log(currentPage);
 
-  const [searchState, setSearchState] = useState<SearchState>({
-    location: "Get your location",
-    date: new Date(),
-    time: "7:00 PM",
-    people: 2,
-    searchQuery: "",
-  });
+  const { searchState, setSearchState, searchForRestaurants } = useRestaurant();
 
   const [isPeopleDropdownOpen, setIsPeopleDropdownOpen] = useState(false);
 
@@ -50,7 +38,7 @@ const Navbar = () => {
             try {
               // Use reverse geocoding to get city name from coordinates
               const response = await fetch(
-                `https://api.geoapify.com/v1/geocode/reverse?lat=${latitude}&lon=${longitude}&apiKey=3845a5ac396a425f8c19040c1af2b9ab`
+                `https://api.geoapify.com/v1/geocode/reverse?lat=${latitude}&lon=${longitude}&apiKey=7afeef337c1e422797a93b61c866581a`
               );
               const data = await response.json();
               if (data.features && data.features.length > 0) {
@@ -76,6 +64,7 @@ const Navbar = () => {
     
     getUserLocation();
   };
+ 
 
   const peopleOptions = Array.from({ length: 15 }, (_, i) => i + 1);
 
@@ -90,7 +79,7 @@ const Navbar = () => {
               <div className="h-8 w-8 bg-slate-100 rounded-full flex items-center justify-center">
                 <div className="h-2 w-2 bg-slate-950 rounded-full"></div>
               </div>
-              <span className="ml-2 font-bold text-lg">DineTable</span>
+              <span className="ml-2 font-bold text-lg">DINEZZY</span>
             </div>
           </Link>
 
@@ -106,12 +95,36 @@ const Navbar = () => {
 
         {/* Right side buttons */}
         <div className="flex items-center space-x-2">
-          {currentPage === "" && (
-            <Link href="/login">
-              <button className="px-4 py-2 text-slate-100 hover:text-slate-200 cursor-pointer">
-                Sign in
+          {isAuthenticated ? (
+            <div className="flex items-center gap-4">
+              <span className="text-slate-300">Hello, {user?.username}</span>
+              <Link href="/profile">
+                <button className="flex items-center px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-md text-slate-100">
+                  <User className="w-4 h-4 mr-2" />
+                  Profile
+                </button>
+              </Link>
+              <button 
+                onClick={logout}
+                className="flex items-center px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-md text-slate-100"
+              >
+                <LogOut className="w-4 h-4 mr-2" />
+                Logout
               </button>
-            </Link>
+            </div>
+          ) : currentPage !== "login" && currentPage !== "signup" && (
+            <div className="flex gap-2">
+              <Link href="/login">
+                <button className="px-4 py-2 text-slate-100 hover:bg-slate-800 rounded-md">
+                  Login
+                </button>
+              </Link>
+              <Link href="/signup">
+                <button className="px-4 py-2 bg-slate-100 text-slate-900 hover:bg-slate-200 rounded-md">
+                  Sign Up
+                </button>
+              </Link>
+            </div>
           )}
         </div>
       </div>
@@ -180,7 +193,7 @@ const Navbar = () => {
                 </div>
               </div>
 
-              <button className="w-full sm:w-auto bg-slate-100 hover:bg-slate-200 text-slate-900 font-medium px-6 py-2 rounded-md">
+              <button className="w-full sm:w-auto bg-slate-100 hover:bg-slate-200 text-slate-900 font-medium px-6 py-2 rounded-md" onClick={() => searchForRestaurants()}>
                 Go
               </button>
             </div>
