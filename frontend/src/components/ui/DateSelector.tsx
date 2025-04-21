@@ -9,14 +9,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 
 
 // SearchState type
-interface SearchState {
-  location: string;
-  date: Date;
-  time: string;
-  people: number;
-  searchQuery: string;
-}
-
+import { SearchState } from "@/context/RestaurantContext";
 
 const DateSelector = ({  searchState, setSearchState }: { searchState: SearchState, setSearchState: (state: SearchState) => void }) => {
   // Handle date selection
