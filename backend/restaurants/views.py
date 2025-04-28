@@ -7,6 +7,7 @@ from .serializers import RestaurantSerializer, RestaurantHoursSerializer, Restau
 from users.models import User
 from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny
+from rest_framework_simplejwt.authentication import JWTAuthentication
 from bookings.models import BookingSlot, Booking, Review
 from django.db.models import Avg, Count
 from datetime import datetime, timedelta
@@ -21,6 +22,7 @@ class IsRestaurantManager(permissions.BasePermission):
 class RestaurantListCreateView(generics.ListCreateAPIView):
     queryset = Restaurant.objects.all()
     serializer_class = RestaurantSerializer
+    authentication_classes = [JWTAuthentication]
 
     def get_permissions(self):
         if self.request.method == 'POST':
@@ -36,6 +38,7 @@ class RestaurantListCreateView(generics.ListCreateAPIView):
 class RestaurantDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Restaurant.objects.all()
     serializer_class = RestaurantSerializer
+    authentication_classes = [JWTAuthentication]
 
     def get_permissions(self):
         if self.request.method in ['PUT', 'PATCH', 'DELETE']:
@@ -54,6 +57,7 @@ class RestaurantDetailView(generics.RetrieveUpdateDestroyAPIView):
 class RestaurantHoursListCreateView(generics.ListCreateAPIView):
     serializer_class = RestaurantHoursSerializer
     permission_classes = [permissions.IsAuthenticated, IsRestaurantManager]
+    authentication_classes = [JWTAuthentication]
 
     def get_queryset(self):
         # Only show hours for restaurants managed by the user
@@ -67,6 +71,7 @@ class RestaurantHoursListCreateView(generics.ListCreateAPIView):
 class RestaurantHoursDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = RestaurantHoursSerializer
     permission_classes = [permissions.IsAuthenticated, IsRestaurantManager]
+    authentication_classes = [JWTAuthentication]
 
     def get_queryset(self):
         return RestaurantHours.objects.filter(restaurant_id__manager_id=self.request.user)
@@ -75,6 +80,7 @@ class RestaurantHoursDetailView(generics.RetrieveUpdateDestroyAPIView):
 class RestaurantPhotoListCreateView(generics.ListCreateAPIView):
     serializer_class = RestaurantPhotoSerializer
     permission_classes = [permissions.IsAuthenticated, IsRestaurantManager]
+    authentication_classes = [JWTAuthentication]
 
     def get_queryset(self):
         return RestaurantPhoto.objects.filter(restaurant_id__manager_id=self.request.user)
@@ -87,12 +93,14 @@ class RestaurantPhotoListCreateView(generics.ListCreateAPIView):
 class RestaurantPhotoDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = RestaurantPhotoSerializer
     permission_classes = [permissions.IsAuthenticated, IsRestaurantManager]
+    authentication_classes = [JWTAuthentication]
 
     def get_queryset(self):
         return RestaurantPhoto.objects.filter(restaurant_id__manager_id=self.request.user)
 
 class RestaurantSearchView(APIView):
     permission_classes = [AllowAny]
+    authentication_classes = [JWTAuthentication]
 
     def get(self, request):
         # Get search parameters
@@ -160,40 +168,20 @@ class RestaurantSearchView(APIView):
             photos = RestaurantPhoto.objects.filter(restaurant_id=restaurant)
             photo_urls = [photo.photo_url for photo in photos]
             
-            # Check if restaurant has available slots (without returning the slots)
-            has_available_slots = False
-            for minutes in range(-30, 31, 30):
-                slot_time = search_datetime + timedelta(minutes=minutes)
-                slot = BookingSlot.objects.filter(
-                    restaurant_id=restaurant,
-                    slot_datetime=slot_time,
-                    table_size__gte=num_people
-                ).first()
-                
-                if slot:
-                    booked_tables = Booking.objects.filter(
-                        slot_id=slot,
-                        status='Booked'
-                    ).count()
-                    
-                    if booked_tables < slot.total_tables:
-                        has_available_slots = True
-                        break
-            
-            if has_available_slots:
-                results.append({
-                    'restaurant_id': restaurant.restaurant_id,
-                    'name': restaurant.name,
-                    'cuisine_type': restaurant.cuisine_type,
-                    'cost_rating': restaurant.cost_rating,
-                    'rating': round(avg_rating, 1),
-                    'photos': photo_urls[:1] if photo_urls else [],  # Return only the first photo
-                })
+            results.append({
+                'id': restaurant.restaurant_id,
+                'name': restaurant.name,
+                'cuisine': restaurant.cuisine_type,
+                'ratePerPerson': restaurant.cost_rating,
+                'rating': round(avg_rating, 1),
+                'imageURL': photo_urls[0] if photo_urls else [],  # Return only the first photo
+            })
 
         return Response(results, status=status.HTTP_200_OK)
 
 class RestaurantDetailSearchView(APIView):
     permission_classes = [AllowAny]
+    authentication_classes = [JWTAuthentication]
 
     def get(self, request, restaurant_id):
         # Get search parameters
