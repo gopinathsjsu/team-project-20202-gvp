@@ -8,6 +8,8 @@ class UserSerializer(serializers.ModelSerializer):
         extra_kwargs = {'password': {'write_only': True}}
 
     def create(self, validated_data):
+        # This method is not used anymore since we're creating the user directly in the view
+        # But we'll keep it for compatibility with other views that might use the serializer
         user = User.objects.create_user(
             username=validated_data['username'],
             email=validated_data['email'],
