@@ -261,3 +261,12 @@ class RestaurantDetailSearchView(APIView):
             'description': restaurant.description,
             'contact_info': restaurant.contact_info
         }, status=status.HTTP_200_OK)
+
+class ManagerRestaurantsView(generics.ListAPIView):
+    serializer_class = RestaurantSerializer
+    permission_classes = [permissions.IsAuthenticated, IsRestaurantManager]
+    authentication_classes = [JWTAuthentication]
+
+    def get_queryset(self):
+        return Restaurant.objects.filter(manager_id=self.request.user)
+    
