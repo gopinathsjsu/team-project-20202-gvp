@@ -67,6 +67,7 @@ export function Form({
         return;
       }
     }
+    console.log(role)
     
     // Clear any previous errors if validation passes
     setError(null);
@@ -83,8 +84,21 @@ export function Form({
         });
       }
       
-      // Redirect to the home page after successful login/signup
-      router.push('/');
+      // Debug - log auth state
+      const user = JSON.parse(localStorage.getItem("user") || "{}");
+      console.log("User after auth:", user);
+      console.log("Role from props:", role);
+      console.log("User role from auth:", user.role);
+      
+      // Force immediate navigation based on role without waiting for PublicRoute redirects
+      if(role === "RestaurantManager") {
+        console.log("In Manager - forcing navigation");
+        // Use replace option to prevent back navigation issues
+        router.replace('/partner/add-new-restaurant');
+      } else if(role === "Customer") {
+        console.log("In Customer - forcing navigation");
+        router.replace('/');
+      }
     } catch (error: Error | unknown) {
       // Handle authentication errors
       if (error instanceof Error) {
@@ -186,7 +200,7 @@ export function Form({
                   <div className="text-center text-sm">
                     Don&apos;t have an account?{" "}
                     <Link href="/signup" className="underline underline-offset-4">
-                      Sing Up
+                      Sign Up
                     </Link>
                   </div>
               :
