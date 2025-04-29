@@ -123,6 +123,8 @@ export default function AddNewRestaurantPage() {
   
   // Log API key presence (without revealing the actual key)
   useEffect(() => {
+    console.log(user)
+    console.log(tokens)
     if (step === 3) {
       console.log("API Key available:", !!process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY);
     }

@@ -61,7 +61,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           const tokens = JSON.parse(storedTokens);
           
           // Verify the token is valid by trying to refresh it
-          console.log(tokens.refresh)
           const isValid = await refreshTokenSilently(tokens.refresh);
           
           if (!isValid) {
@@ -78,6 +77,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             setAuthState(prev => ({
               ...prev,
               user: user,
+              tokens: tokens,
               isAuthenticated: true,
               isLoading: false,
             }));
@@ -121,24 +121,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const user = storedUser ? JSON.parse(storedUser) : null;
         
         // Update tokens in state and localStorage
-        // console.log("Tokens:")
-        console.log(data)
+        const newTokens = {
+          access: data.access,
+          refresh: refreshToken
+        };
+        
+        // Update state with new tokens
         setAuthState(prev => ({
           ...prev,
           user: user,
+          tokens: newTokens,
           isAuthenticated: true,
           isLoading: false,
-          tokens: {
-            access: data.access,
-            refresh: prev.tokens?.refresh || refreshToken
-          }
         }));
-        console.log(authState)
         
-        localStorage.setItem("tokens", JSON.stringify({
-          access: data.access,
-          refresh: refreshToken
-        }));
+        // Update localStorage
+        localStorage.setItem("tokens", JSON.stringify(newTokens));
         return true;
       }
       

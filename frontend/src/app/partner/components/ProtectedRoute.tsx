@@ -14,6 +14,7 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
+      console.log("Manger is not authenticated, redirecting to /partner/login");
       router.push("/partner/login");
     }
   }, [isLoading, isAuthenticated, router]);
