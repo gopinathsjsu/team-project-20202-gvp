@@ -2,10 +2,11 @@ from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.shortcuts import get_object_or_404
-from .models import BookingSlot, Booking
+from .models import BookingSlot, Booking, Review
 from .serializers import (
     BookingSerializer, BookingCreateSerializer, 
-    BookingSlotSerializer, BookingSlotDetailSerializer
+    BookingSlotSerializer, BookingSlotDetailSerializer,
+    ReviewSerializer
 )
 from restaurants.models import Restaurant, RestaurantHours
 from restaurants.views import IsRestaurantManager
@@ -283,5 +284,96 @@ class BookingDetailView(generics.RetrieveUpdateDestroyAPIView):
         return Response({
             'error': 'Only cancelling bookings is allowed'
         }, status=status.HTTP_400_BAD_REQUEST)
+
+class ReviewCreateView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
+
+    def post(self, request):
+        # Get the restaurant
+        restaurant = get_object_or_404(Restaurant, restaurant_id=request.data.get('restaurant_id'), approved=True)
+
+        # Create serializer with context
+        serializer = ReviewSerializer(
+            data=request.data,
+            context={
+                'restaurant_id': restaurant,
+                'customer_id': request.user
+            }
+        )
+
+        if serializer.is_valid():
+            # Check if user has already reviewed this restaurant
+            existing_review = Review.objects.filter(
+                restaurant_id=restaurant,
+                customer_id=request.user
+            ).first()
+
+            if existing_review:
+                return Response({
+                    'error': 'You have already reviewed this restaurant'
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+            # Save the review
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class RestaurantReviewsView(generics.ListAPIView):
+    serializer_class = ReviewSerializer
+    permission_classes = [permissions.AllowAny]
+    authentication_classes = [JWTAuthentication]
+
+    def get_queryset(self):
+        restaurant_id = self.kwargs['restaurant_id']
+        return Review.objects.filter(restaurant_id=restaurant_id).order_by('-created_at')
+
+class ReviewCreateBodyView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
+
+    def post(self, request):
+        # Get the restaurant_id from request body
+        restaurant_id = request.data.get('restaurant_id')
+        if not restaurant_id:
+            return Response({
+                'error': 'restaurant_id is required in the request body'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        # Get the restaurant
+        try:
+            restaurant = Restaurant.objects.get(restaurant_id=restaurant_id, approved=True)
+        except Restaurant.DoesNotExist:
+            return Response({
+                'error': 'Restaurant not found'
+            }, status=status.HTTP_404_NOT_FOUND)
+
+        # Create serializer with context
+        serializer = ReviewSerializer(
+            data=request.data,
+            context={
+                'restaurant_id': restaurant,
+                'customer_id': request.user
+            }
+        )
+
+        if serializer.is_valid():
+            # Check if user has already reviewed this restaurant
+            existing_review = Review.objects.filter(
+                restaurant_id=restaurant,
+                customer_id=request.user
+            ).first()
+
+            if existing_review:
+                return Response({
+                    'error': 'You have already reviewed this restaurant'
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+            # Save the review
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 

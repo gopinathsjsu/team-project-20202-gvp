@@ -3,7 +3,7 @@ from .models import Restaurant, RestaurantHours, RestaurantPhoto
 import boto3
 from django.conf import settings
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta
 import os
 
 def upload_to_s3(image_file, folder_name):
@@ -74,6 +74,7 @@ class RestaurantFullSerializer(serializers.ModelSerializer):
     table_sizes = serializers.ListField(child=serializers.IntegerField(), write_only=True, required=False)
     available_booking_times = serializers.ListField(child=serializers.TimeField(), write_only=True, required=False)
     location = serializers.JSONField(write_only=True, required=False)
+    zipcode = serializers.CharField(write_only=True, source='zip')
     manager_id = serializers.PrimaryKeyRelatedField(read_only=True)
     restaurant_photos = serializers.SerializerMethodField()
     operating_hours = serializers.SerializerMethodField()
@@ -86,7 +87,7 @@ class RestaurantFullSerializer(serializers.ModelSerializer):
             'restaurant_id', 'manager_id', 'name', 'cuisine_type', 'cost_rating', 
             'description', 'address', 'contact_info', 'days_open', 'opening_time', 
             'closing_time', 'photos', 'table_sizes', 'available_booking_times', 
-            'location', 'city', 'state', 'zip', 'location_data', 'approved', 
+            'location', 'city', 'state', 'zipcode', 'location_data', 'approved', 
             'restaurant_photos', 'operating_hours', 'available_slots'
         ]
         read_only_fields = ['restaurant_id', 'manager_id', 'approved']
@@ -117,7 +118,6 @@ class RestaurantFullSerializer(serializers.ModelSerializer):
                     'time': current_time.strftime('%H:%M')
                 })
                 # Add 30 minutes
-                current_time = datetime.strptime(str(current_time), '%H:%M:%S')
                 current_time = (datetime.combine(datetime.today(), current_time) + timedelta(minutes=30)).time()
 
         return slots
@@ -141,8 +141,8 @@ class RestaurantFullSerializer(serializers.ModelSerializer):
         
         # Set location data if provided
         if location:
-            validated_data['latitude'] = location.get('latitude')
-            validated_data['longitude'] = location.get('longitude')
+            validated_data['latitude'] = location.get('lat')
+            validated_data['longitude'] = location.get('lng')
 
         # Create restaurant with manager_id from context
         restaurant = super().create(validated_data)
@@ -179,8 +179,8 @@ class RestaurantFullSerializer(serializers.ModelSerializer):
         
         # Update location data if provided
         if location:
-            instance.latitude = location.get('latitude', instance.latitude)
-            instance.longitude = location.get('longitude', instance.longitude)
+            instance.latitude = location.get('lat', instance.latitude)
+            instance.longitude = location.get('lng', instance.longitude)
 
         # Update basic restaurant info
         for attr, value in validated_data.items():
