@@ -13,6 +13,7 @@ from restaurants.views import IsRestaurantManager
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from datetime import datetime, timedelta
 import pytz
+from django.utils import timezone
 
 # BookingSlot Views
 class BookingSlotListCreateView(generics.ListCreateAPIView):
@@ -77,6 +78,7 @@ class CreateRecurringBookingSlotsView(APIView):
                 
                 if hours:
                     # Create slots for each hour of operation
+                    # Use the exact time from restaurant hours without timezone conversion
                     current_time = datetime.combine(current_date, hours.open_time)
                     close_time = datetime.combine(current_date, hours.close_time)
                     
@@ -92,7 +94,7 @@ class CreateRecurringBookingSlotsView(APIView):
                             ).first()
                             
                             if not existing_slot:
-                                # Create new slot
+                                # Create new slot with the exact time
                                 slot = BookingSlot.objects.create(
                                     restaurant_id=restaurant,
                                     slot_datetime=current_time,

@@ -137,7 +137,7 @@ class RestaurantTimeSlotsView(APIView):
                         ).count()
                         
                         if booked_tables < slot.total_tables:
-                            time_slots.append(slot_time.strftime("%H:%M"))
+                            time_slots.append({"time" : slot_time.strftime("%H:%M") , "id" : slot.slot_id})
 
         return Response({
             'restaurant_id': restaurant.restaurant_id,

@@ -13,9 +13,9 @@ def upload_to_s3(image_file, folder_name):
     """
     s3_client = boto3.client(
         's3',
-        aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
-        aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
-        region_name=settings.AWS_S3_REGION_NAME
+        aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
+        aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'),
+        region_name=os.getenv('AWS_S3_REGION_NAME')
     )
 
     # Generate a unique filename
@@ -23,6 +23,16 @@ def upload_to_s3(image_file, folder_name):
     unique_id = str(uuid.uuid4())
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
     filename = f"{folder_name}/{timestamp}_{unique_id}{file_extension}"
+
+    # Create an empty folder marker in S3
+    try:
+        s3_client.put_object(
+            Bucket=settings.AWS_STORAGE_BUCKET_NAME,
+            Key=f"{folder_name}/",
+            Body=''
+        )
+    except Exception as e:
+        print(f"Error creating folder marker: {str(e)}")
 
     # Upload the file
     s3_client.upload_fileobj(
@@ -157,12 +167,42 @@ class RestaurantFullSerializer(serializers.ModelSerializer):
             )
 
         # Upload photos to S3 and create restaurant photos
-        for photo in photos:
-            photo_url = upload_to_s3(photo, f'restaurants/{restaurant.restaurant_id}/photos')
-            RestaurantPhoto.objects.create(
-                restaurant_id=restaurant,
-                photo_url=photo_url
+        if photos:
+            # Create base folder for restaurant photos
+            base_folder = f'restaurants/{restaurant.restaurant_id}'
+            photos_folder = f'{base_folder}/photos'
+            
+            # Create folder structure in S3
+            s3_client = boto3.client(
+                's3',
+                aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
+                aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'),
+                region_name=os.getenv('AWS_S3_REGION_NAME')
             )
+            
+            try:
+                # Create base restaurant folder
+                s3_client.put_object(
+                    Bucket=settings.AWS_STORAGE_BUCKET_NAME,
+                    Key=f"{base_folder}/",
+                    Body=''
+                )
+                # Create photos subfolder
+                s3_client.put_object(
+                    Bucket=settings.AWS_STORAGE_BUCKET_NAME,
+                    Key=f"{photos_folder}/",
+                    Body=''
+                )
+            except Exception as e:
+                print(f"Error creating S3 folders: {str(e)}")
+
+            # Upload photos after folder structure is created
+            for photo in photos:
+                photo_url = upload_to_s3(photo, photos_folder)
+                RestaurantPhoto.objects.create(
+                    restaurant_id=restaurant,
+                    photo_url=photo_url
+                )
 
         return restaurant
 
@@ -204,9 +244,28 @@ class RestaurantFullSerializer(serializers.ModelSerializer):
         if photos is not None:
             # Delete existing photos
             RestaurantPhoto.objects.filter(restaurant_id=instance).delete()
+            
+            # Create photos folder if it doesn't exist
+            photos_folder = f'restaurants/{instance.restaurant_id}/photos'
+            s3_client = boto3.client(
+                's3',
+                aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
+                aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'),
+                region_name=os.getenv('AWS_S3_REGION_NAME')
+            )
+            
+            try:
+                s3_client.put_object(
+                    Bucket=settings.AWS_STORAGE_BUCKET_NAME,
+                    Key=f"{photos_folder}/",
+                    Body=''
+                )
+            except Exception as e:
+                print(f"Error creating S3 photos folder: {str(e)}")
+
             # Upload new photos to S3 and create restaurant photos
             for photo in photos:
-                photo_url = upload_to_s3(photo, f'restaurants/{instance.restaurant_id}/photos')
+                photo_url = upload_to_s3(photo, photos_folder)
                 RestaurantPhoto.objects.create(
                     restaurant_id=instance,
                     photo_url=photo_url
