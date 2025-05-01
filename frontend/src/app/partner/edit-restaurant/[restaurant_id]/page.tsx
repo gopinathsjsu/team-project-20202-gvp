@@ -35,7 +35,7 @@ interface RestaurantForm {
   address: string;
   city: string;
   state: string;
-  zip: string;
+  zipcode: string;
   contact_info: string;
   
   // Operating Hours
@@ -100,7 +100,7 @@ export default function EditRestaurantPage() {
     address: "",
     city: "",
     state: "",
-    zip: "",
+    zipcode: "",
     contact_info: "",
     opening_time: "",
     closing_time: "",
@@ -145,7 +145,7 @@ export default function EditRestaurantPage() {
           address: restaurantData.address || "",
           city: restaurantData.city || "",
           state: restaurantData.state || "",
-          zip: restaurantData.zip || "",
+          zipcode: restaurantData.zipcode || "",
           contact_info: restaurantData.contact_info || "",
           opening_time: restaurantData.opening_time || "",
           closing_time: restaurantData.closing_time || "",
@@ -297,7 +297,7 @@ export default function EditRestaurantPage() {
         address: formData.address,
         city: formData.city,
         state: formData.state,
-        zip: formData.zip,
+        zipcode: formData.zipcode,
         contact_info: formData.contact_info,
         latitude: formData.location?.lat.toString(),
         longitude: formData.location?.lng.toString(),
@@ -306,9 +306,12 @@ export default function EditRestaurantPage() {
         days_open: formData.days_open
       };
       
-      const response = await fetch(`http://192.168.1.115:8000/api/restaurants/${restaurantId}/`, {
+      const response = await fetch(`http://192.168.1.115:8000/api/restaurants/update/`, {
         method: 'PUT',
-        body: JSON.stringify(updateData),
+        body: JSON.stringify({
+          ...updateData,
+          restaurant_id: restaurantId
+        }),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${tokens?.access}`
@@ -509,12 +512,12 @@ export default function EditRestaurantPage() {
                         </div>
                         
                         <div className="grid gap-3">
-                          <Label htmlFor="zip">Zip Code*</Label>
+                          <Label htmlFor="zipcode">zipcode Code*</Label>
                           <Input
-                            id="zip"
-                            name="zip"
+                            id="zipcode"
+                            name="zipcode"
                             placeholder="95112"
-                            value={formData.zip}
+                            value={formData.zipcode}
                             onChange={handleInputChange}
                             required
                           />
@@ -683,7 +686,7 @@ export default function EditRestaurantPage() {
                           </div>
                           <div className="py-2">
                             <p className="font-medium">Address:</p>
-                            <p>{formData.address}, {formData.city}, {formData.state} {formData.zip}</p>
+                            <p>{formData.address}, {formData.city}, {formData.state} {formData.zipcode}</p>
                           </div>
                           <div className="py-2">
                             <p className="font-medium">Contact Info:</p>

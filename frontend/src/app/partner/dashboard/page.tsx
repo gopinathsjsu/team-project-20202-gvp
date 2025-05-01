@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { Store } from "lucide-react";
 import Link from "next/link";
+
 import {
   Card,
   CardHeader,
@@ -22,7 +23,7 @@ export default function PartnerDashboard() {
   useEffect(() => {
     // Only redirect if we've finished loading and the user is definitely not authenticated
     if (!isLoading && !isAuthenticated) {
-      router.push("/login");
+      router.push("/partner/login");
     }
     // Don't check for partner role yet, as it might not be loaded initially
   }, [isAuthenticated, isLoading, router]);

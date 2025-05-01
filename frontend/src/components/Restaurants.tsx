@@ -16,7 +16,7 @@ export default function Restaurants() {
     return (
         <div className="w-3/4 h-full m-auto place-items-center gap-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4  ">
             {
-                restaurants.map((restaurant)=>(<RestaurantCard key={restaurant.id} name={restaurant.name} imageURL={restaurant.imageURL} cuisine={restaurant.cuisine} rating={restaurant.rating} ratePerPerson={restaurant.ratePerPerson} />))
+                restaurants.map((restaurant)=>(<RestaurantCard key={restaurant.id} restaurantID={restaurant.id} name={restaurant.name} imageURL={restaurant.imageURL} cuisine={restaurant.cuisine} rating={restaurant.rating} ratePerPerson={restaurant.ratePerPerson} />))
             }
         </div>
     )
