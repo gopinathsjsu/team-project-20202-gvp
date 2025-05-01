@@ -123,7 +123,7 @@ export default function MyBookingsPage() {
         
         {bookings.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-xl mb-4">You don't have any reservations yet.</p>
+            <p className="text-xl mb-4">You don&apos;t have any reservations yet.</p>
             <Link 
               href="/restaurants"
               className="inline-block px-6 py-3 bg-red-500 text-white rounded-md hover:bg-red-600 transition"

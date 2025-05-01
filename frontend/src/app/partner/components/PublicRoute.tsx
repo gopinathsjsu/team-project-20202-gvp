@@ -16,7 +16,7 @@ export function PublicRoute({ children }: PublicRouteProps) {
     if (!isLoading && isAuthenticated) {
       // If user is authenticated and is a restaurant manager, redirect to partner dashboard
       if (user?.role === "RestaurantManager") {
-        router.push("/partner/add-new-restaurant");
+        router.push("/partner/dashboard");
       } else {
         // Otherwise redirect to home (if this is a customer using partner routes)
         router.push("/");
