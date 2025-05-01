@@ -91,14 +91,14 @@ export function Form({
       console.log("User role from auth:", user.role);
       
       // Force immediate navigation based on role without waiting for PublicRoute redirects
-      if (user.role === "Admin") {
+      if (role === "Admin") {
         console.log("In Admin - forcing navigation");
         router.replace('/admin');
-      } else if(user.role === "RestaurantManager" || role === "RestaurantManager") {
+      } else if(role === "RestaurantManager") {
         console.log("In Manager - forcing navigation");
         // Use replace option to prevent back navigation issues
-        router.replace('/partner/add-new-restaurant');
-      } else if(user.role === "Customer" || role === "Customer") {
+        router.replace('/partner/dashboard');
+      } else if(role === "Customer" ) {
         console.log("In Customer - forcing navigation");
         router.replace('/');
       }
