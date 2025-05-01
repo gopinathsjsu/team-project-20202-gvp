@@ -84,7 +84,7 @@ export default function ApproveRestaurantsPage() {
   useEffect(() => {
     const fetchUnapprovedRestaurants = async () => {
       try {
-        const response = await fetch("http://localhost:8000/api/restaurants/admin/unapproved/", {
+        const response = await fetch("http://192.168.1.115:8000/api/restaurants/admin/unapproved/", {
           headers: {
             Authorization: `Bearer ${tokens?.access}`,
           },
@@ -119,7 +119,7 @@ export default function ApproveRestaurantsPage() {
   // Handle approve restaurant
   const handleApprove = async (restaurantId: number) => {
     try {
-      const response = await fetch(`http://localhost:8000/api/restaurants/admin/approve/${restaurantId}/`, {
+      const response = await fetch(`http://192.168.1.115:8000/api/restaurants/admin/approve/${restaurantId}/`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${tokens?.access}`,
@@ -153,7 +153,7 @@ export default function ApproveRestaurantsPage() {
   // Handle disapprove (delete) restaurant
   const handleDisapprove = async (restaurantId: number) => {
     try {
-      const response = await fetch(`http://localhost:8000/api/restaurants/admin/remove/${restaurantId}/`, {
+      const response = await fetch(`http://192.168.1.115:8000/api/restaurants/admin/remove/${restaurantId}/`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${tokens?.access}`,

@@ -3,7 +3,11 @@
 import React, { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
-import { Loader2 } from "lucide-react";
+import { Loader2, CalendarIcon } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 
 interface Restaurant {
   restaurant_id: number;
@@ -25,11 +29,25 @@ interface Restaurant {
   updated_at: string;
 }
 
+interface SlotsFormData {
+  start_date: Date | undefined;
+  end_date: Date | undefined;
+  table_sizes: string;
+}
+
 export default function ViewAllRestaurants() {
   const { tokens, isAuthenticated } = useAuth();
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isCreatingSlots, setIsCreatingSlots] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [openPopoverId, setOpenPopoverId] = useState<number | null>(null);
+  const [slotsFormData, setSlotsFormData] = useState<SlotsFormData>({
+    start_date: undefined,
+    end_date: undefined,
+    table_sizes: ''
+  });
 
   useEffect(() => {
     const fetchRestaurants = async () => {
@@ -62,6 +80,66 @@ export default function ViewAllRestaurants() {
 
     fetchRestaurants();
   }, [isAuthenticated, tokens]);
+
+  const handleSlotsFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSlotsFormData({
+      ...slotsFormData,
+      [e.target.name]: e.target.value
+    });
+  };
+
+  const handleCreateSlots = async (restaurantId: number) => {
+    setIsCreatingSlots(true);
+    setError(null);
+    setSuccessMessage(null);
+
+    if (!slotsFormData.start_date || !slotsFormData.end_date) {
+      setError("Please select both start and end dates");
+      setIsCreatingSlots(false);
+      return;
+    }
+
+    try {
+      const response = await fetch("http://192.168.1.115:8000/api/bookings/slots/recurring/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${tokens?.access}`,
+        },
+        body: JSON.stringify({
+          restaurant_id: restaurantId,
+          start_date: format(slotsFormData.start_date, 'yyyy-MM-dd'),
+          end_date: format(slotsFormData.end_date, 'yyyy-MM-dd'),
+          table_sizes: slotsFormData.table_sizes.split(',').map(size => parseInt(size.trim()))
+        }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.detail || "Failed to create slots");
+      }
+
+      setSuccessMessage("Booking slots created successfully!");
+      // Clear form data
+      setSlotsFormData({
+        start_date: undefined,
+        end_date: undefined,
+        table_sizes: ''
+      });
+
+      // Close popover after successful creation
+      setTimeout(() => {
+        setOpenPopoverId(null);
+        setSuccessMessage(null);
+      }, 3000);
+
+    } catch (err) {
+      console.error("Error creating slots:", err);
+      setError(err instanceof Error ? err.message : "Failed to create slots");
+    } finally {
+      setIsCreatingSlots(false);
+    }
+  };
 
   const renderCostRating = (rating: number) => {
     return "$".repeat(rating);
@@ -116,8 +194,8 @@ export default function ViewAllRestaurants() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {restaurants.map((restaurant) => (
-          <div key={restaurant.restaurant_id} className="border rounded-lg overflow-hidden shadow-md">
-            <div className="p-4">
+          <div key={restaurant.restaurant_id} className="border rounded-lg overflow-hidden shadow-md flex flex-col">
+            <div className="p-4 flex-grow">
               <h2 className="text-xl font-semibold mb-2">{restaurant.name}</h2>
               <p className="text-gray-700 mb-2">{restaurant.description}</p>
               <div className="flex justify-between text-sm text-gray-600 mb-2">
@@ -140,20 +218,133 @@ export default function ViewAllRestaurants() {
                 </span>
               </div>
               
-              <div className="mt-4 flex justify-end space-x-2">
-                <Link 
-                  href={`/partner/edit-restaurant/${restaurant.restaurant_id}`}
-                  className="px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600"
-                >
-                  Edit
-                </Link>
-                <Link 
-                  href={`/partner/view-restaurant/${restaurant.restaurant_id}`}
-                  className="px-3 py-1 bg-primary text-black rounded text-sm hover:bg-primary/90"
-                >
-                  View Details
-                </Link>
-              </div>
+              {successMessage && openPopoverId === restaurant.restaurant_id && (
+                <div className="mt-2 p-2 bg-green-100 text-green-800 rounded text-sm">
+                  {successMessage}
+                </div>
+              )}
+            </div>
+            
+            <div className="mt-auto p-4 pt-0   gap-2 flex justify-end align-middle">
+              <Link 
+                href={`/partner/edit-restaurant/${restaurant.restaurant_id}`}
+                className="px-3 py-1 bg-blue-800 text-white rounded text-sm hover:bg-blue-600"
+              >
+                Edit
+              </Link>
+              
+              <Popover open={openPopoverId === restaurant.restaurant_id} onOpenChange={(open) => {
+                if (open) {
+                  setOpenPopoverId(restaurant.restaurant_id);
+                } else {
+                  setOpenPopoverId(null);
+                }
+              }}>
+                <PopoverTrigger asChild>
+                  <button 
+                    className="px-3 py-1 bg-green-700 text-white rounded text-sm hover:bg-green-600 cursor-pointer"
+                  >
+                    Add Slots
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent className="w-80">
+                  <div className="space-y-4">
+                    <h3 className="font-medium">Create Booking Slots</h3>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Start Date</label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <button
+                            className={cn(
+                              "w-full flex items-center justify-between p-2 text-sm border rounded",
+                              !slotsFormData.start_date && "text-muted-foreground"
+                            )}
+                          >
+                            {slotsFormData.start_date ? format(slotsFormData.start_date, "PPP") : <span>Pick a date</span>}
+                            <CalendarIcon className="h-4 w-4 opacity-50" />
+                          </button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={slotsFormData.start_date}
+                            onSelect={(date) => 
+                              setSlotsFormData(prev => ({ ...prev, start_date: date }))
+                            }
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">End Date</label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <button
+                            className={cn(
+                              "w-full flex items-center justify-between p-2 text-sm border rounded",
+                              !slotsFormData.end_date && "text-muted-foreground"
+                            )}
+                          >
+                            {slotsFormData.end_date ? format(slotsFormData.end_date, "PPP") : <span>Pick a date</span>}
+                            <CalendarIcon className="h-4 w-4 opacity-50" />
+                          </button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={slotsFormData.end_date}
+                            onSelect={(date) => 
+                              setSlotsFormData(prev => ({ ...prev, end_date: date }))
+                            }
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Table Sizes (comma-separated)</label>
+                      <input
+                        type="text"
+                        name="table_sizes"
+                        value={slotsFormData.table_sizes}
+                        onChange={handleSlotsFormChange}
+                        placeholder="2, 4, 6"
+                        className="w-full p-2 text-sm border rounded"
+                        required
+                      />
+                    </div>
+                    
+                    {error && openPopoverId === restaurant.restaurant_id && (
+                      <div className="p-2 bg-red-100 text-red-800 rounded text-sm">
+                        {error}
+                      </div>
+                    )}
+                    
+                    <button
+                      onClick={() => handleCreateSlots(restaurant.restaurant_id)}
+                      disabled={isCreatingSlots}
+                      className="w-full py-2 bg-primary text-black rounded hover:bg-primary/90 disabled:opacity-50"
+                    >
+                      {isCreatingSlots ? (
+                        <span className="flex items-center justify-center">
+                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                          Creating...
+                        </span>
+                      ) : (
+                        "Create Slots"
+                      )}
+                    </button>
+                  </div>
+                </PopoverContent>
+              </Popover>
+              
+              <Link 
+                href={`/partner/view-restaurant/${restaurant.restaurant_id}`}
+                className="px-3 py-1 bg-gray-500 text-white text-black rounded text-sm hover:bg-primary/90 hover:text-black"
+              >
+                View Details
+              </Link>
             </div>
           </div>
         ))}

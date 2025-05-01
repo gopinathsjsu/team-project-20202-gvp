@@ -4,6 +4,7 @@ import "./globals.css";
 import Navbar from "../components/Navbar";
 import { AuthProvider } from "../context/AuthContext";
 import {RestaurantProvider} from "../context/RestaurantContext";
+import { Toaster } from "react-hot-toast";
 
 
 
@@ -40,6 +41,7 @@ export default function RootLayout({
               
                   <Navbar />
                   <main className="flex-grow w-full">{children}</main>
+                  <Toaster position="bottom-center" />
   
               </div>
             </RestaurantProvider>

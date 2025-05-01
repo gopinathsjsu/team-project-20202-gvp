@@ -49,7 +49,7 @@ export const RestaurantProvider = ({ children }: { children: ReactNode }) => {
   ]);
   
   const [searchState, setSearchState] = useState<SearchState>({
-    location: 'Get your location',
+    location: 'San Francisco',
     date: undefined,
     time: '19:00',
     people: 1,

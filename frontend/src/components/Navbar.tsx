@@ -1,12 +1,31 @@
 // components/Navbar.tsx
 "use client";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Search, Users, MapPin, ChevronDown, LogOut, User } from "lucide-react";
 import Link from "next/link";
 import DateSelector from "./ui/DateSelector";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import {useRestaurant} from "@/context/RestaurantContext";
+
+// Simplified cities list
+const cities = [
+  "San Francisco",
+  "New York",
+  "Los Angeles",
+  "Chicago",
+  "Seattle",
+  "Austin",
+  "Boston",
+  "Denver",
+  "Portland",
+  "Miami",
+  "Washington, D.C.",
+  "Philadelphia",
+  "San Diego",
+  "Atlanta",
+  "San Jose"
+];
 
 const Navbar = () => {
   const { user, isAuthenticated, logout } = useAuth();
@@ -17,6 +36,30 @@ const Navbar = () => {
   const { searchState, setSearchState, searchForRestaurants } = useRestaurant();
 
   const [isPeopleDropdownOpen, setIsPeopleDropdownOpen] = useState(false);
+  const [isLocationDropdownOpen, setIsLocationDropdownOpen] = useState(false);
+  
+  const locationDropdownRef = useRef<HTMLDivElement>(null);
+  const locationButtonRef = useRef<HTMLButtonElement>(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        isLocationDropdownOpen &&
+        locationDropdownRef.current && 
+        !locationDropdownRef.current.contains(event.target as Node) &&
+        locationButtonRef.current &&
+        !locationButtonRef.current.contains(event.target as Node)
+      ) {
+        setIsLocationDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isLocationDropdownOpen]);
 
   const handlePeopleSelect = (count: number) => {
     setSearchState({
@@ -24,6 +67,14 @@ const Navbar = () => {
       people: count,
     });
     setIsPeopleDropdownOpen(false);
+  };
+
+  const handleLocationSelect = (city: string) => {
+    setSearchState({
+      ...searchState,
+      location: city,
+    });
+    setIsLocationDropdownOpen(false);
   };
 
   const searchForLocation = () => {
@@ -69,11 +120,11 @@ const Navbar = () => {
   const peopleOptions = Array.from({ length: 15 }, (_, i) => i + 1);
 
   return (
-    <div className="w-full ">
+    <div className="w-full">
       {/* Top navigation bar */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between">
         {/* Logo and location */}
-        <div className="flex items-center space-x-6">
+        <div className="flex items-center space-x-6 relative">
           <Link href="/">
             <div className="flex items-center">
               <div className="h-8 w-8 bg-slate-100 rounded-full flex items-center justify-center">
@@ -84,13 +135,34 @@ const Navbar = () => {
           </Link>
 
           <button
+            ref={locationButtonRef}
             className="flex items-center text-slate-300 hover:text-slate-400 cursor-pointer"
-            onClick={() => searchForLocation()}
+            onClick={() => setIsLocationDropdownOpen(!isLocationDropdownOpen)}
           >
-            <MapPin className="w-4 h-4 mr-1 " />
+            <MapPin className="w-4 h-4 mr-1" />
             <span>{searchState.location}</span>
             <ChevronDown className="w-4 h-4 ml-1" />
           </button>
+          
+          {/* Simplified location selector popup */}
+          {isLocationDropdownOpen && (
+            <div 
+              ref={locationDropdownRef}
+              className="absolute top-10 left-0 z-50 bg-slate-900 rounded-md shadow-lg overflow-auto w-64 max-h-96"
+            >
+              <div className="p-2">
+                {cities.map((city) => (
+                  <div
+                    key={city}
+                    className="px-4 py-2 text-white hover:bg-slate-800 cursor-pointer rounded"
+                    onClick={() => handleLocationSelect(city)}
+                  >
+                    {city}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Right side buttons */}
@@ -200,7 +272,7 @@ const Navbar = () => {
 
             <div className="mt-3 text-sm text-slate-400 flex justify-center sm:justify-start items-center">
               <span>It looks like you are in {searchState.location}. Not correct?</span>
-              <button className="flex items-center ml-2 text-slate-500 hover:text-slate-400">
+              <button className="flex items-center ml-2 text-slate-500 hover:text-slate-400 cursor-pointer" onClick={() => searchForLocation()}>
                 <MapPin className="w-4 h-4 mr-1" />
                 Get current location
               </button>

@@ -43,7 +43,7 @@ const AdminDashboard = () => {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const response = await fetch("http://localhost:8000/api/restaurants/admin/dashboard/", {
+        const response = await fetch("http://192.168.1.115:8000/api/restaurants/admin/dashboard/", {
           headers: {
             Authorization: `Bearer ${tokens?.access}`,
           },
