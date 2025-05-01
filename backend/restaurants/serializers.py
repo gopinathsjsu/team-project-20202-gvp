@@ -13,11 +13,14 @@ def upload_to_s3(image_file, folder_name):
     """
     s3_client = boto3.client(
         's3',
-        aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
-        aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'),
-        region_name=os.getenv('AWS_S3_REGION_NAME')
+        aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+        aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+        region_name=settings.AWS_S3_REGION_NAME
     )
-
+    print(settings.AWS_ACCESS_KEY_ID)
+    print(settings.AWS_SECRET_ACCESS_KEY)
+    print(settings.AWS_STORAGE_BUCKET_NAME)
+    print(settings.AWS_S3_REGION_NAME)
     # Generate a unique filename
     file_extension = os.path.splitext(image_file.name)[1]
     unique_id = str(uuid.uuid4())
@@ -40,8 +43,7 @@ def upload_to_s3(image_file, folder_name):
         settings.AWS_STORAGE_BUCKET_NAME,
         filename,
         ExtraArgs={
-            'ContentType': image_file.content_type,
-            'ACL': 'public-read'
+            'ContentType': image_file.content_type
         }
     )
 
@@ -175,9 +177,9 @@ class RestaurantFullSerializer(serializers.ModelSerializer):
             # Create folder structure in S3
             s3_client = boto3.client(
                 's3',
-                aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
-                aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'),
-                region_name=os.getenv('AWS_S3_REGION_NAME')
+                aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+                aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+                region_name=settings.AWS_S3_REGION_NAME
             )
             
             try:
@@ -249,9 +251,9 @@ class RestaurantFullSerializer(serializers.ModelSerializer):
             photos_folder = f'restaurants/{instance.restaurant_id}/photos'
             s3_client = boto3.client(
                 's3',
-                aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
-                aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'),
-                region_name=os.getenv('AWS_S3_REGION_NAME')
+                aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+                aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+                region_name=settings.AWS_S3_REGION_NAME
             )
             
             try:

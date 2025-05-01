@@ -107,7 +107,7 @@ class RestaurantTimeSlotsView(APIView):
 
         # Get available time slots
         time_slots = []
-        for minutes in range(-30, 31, 30):  # -30 to +30 minutes in 30-minute intervals
+        for minutes in range(-30, 31):  # -30 to +30 minutes in 30-minute intervals
             slot_time = search_datetime + timedelta(minutes=minutes)
             
             # Check if slot is within restaurant hours
@@ -248,12 +248,29 @@ class RestaurantSearchView(APIView):
             ).first()
             
             if hours:
-                open_time = datetime.combine(search_datetime.date(), hours.open_time)
-                close_time = datetime.combine(search_datetime.date(), hours.close_time)
-                open_time = pytz.UTC.localize(open_time)
-                close_time = pytz.UTC.localize(close_time)
+                # Convert search_datetime to local time
+                local_time = search_datetime.astimezone(pytz.timezone('America/Los_Angeles'))
+                search_time = local_time.time()
                 
-                if open_time <= search_datetime <= close_time:
+                # Convert times to minutes since midnight for easier comparison
+                def time_to_minutes(t):
+                    return t.hour * 60 + t.minute
+                
+                search_minutes = time_to_minutes(search_time)
+                open_minutes = time_to_minutes(hours.open_time)
+                close_minutes = time_to_minutes(hours.close_time)
+                
+                # Handle case where closing time is on the next day (e.g., 23:59)
+                if close_minutes < open_minutes:
+                    close_minutes += 24 * 60  # Add 24 hours worth of minutes
+                    if search_minutes < open_minutes:
+                        search_minutes += 24 * 60  # Add 24 hours worth of minutes
+                
+                print(f"Search time: {search_time}, Minutes: {search_minutes}")
+                print(f"Open time: {hours.open_time}, Minutes: {open_minutes}")
+                print(f"Close time: {hours.close_time}, Minutes: {close_minutes}")
+                
+                if open_minutes <= search_minutes <= close_minutes:
                     open_restaurants.append(restaurant)
 
         # Get basic restaurant information
