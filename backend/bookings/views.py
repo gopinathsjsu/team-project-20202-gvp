@@ -206,20 +206,22 @@ class CreateBookingView(APIView):
         serializer = BookingCreateSerializer(data=request.data)
         
         if serializer.is_valid():
-            slot_id = serializer.validated_data.get('slot_id')
-            number_of_people = serializer.validated_data.get('number_of_people')
+            slot_id = request.data.get('slot_id')
+            number_of_people = request.data.get('number_of_people')
             
             # Get the slot
             try:
+                # Convert slot_id to integer if it's not already
+                slot_id = int(slot_id) if not isinstance(slot_id, int) else slot_id
                 slot = BookingSlot.objects.get(slot_id=slot_id)
-            except BookingSlot.DoesNotExist:
+            except (BookingSlot.DoesNotExist, ValueError):
                 return Response({
                     'error': 'Booking slot not found'
                 }, status=status.HTTP_404_NOT_FOUND)
             
             # Check if the slot is still available
             booked_tables = Booking.objects.filter(
-                slot_id=slot,
+                slot_id_id=slot.slot_id,
                 status='Booked'
             ).count()
             

@@ -23,7 +23,7 @@ urlpatterns = [
     
     # User booking endpoints
     path('restaurants/<int:restaurant_id>/available-slots/', AvailableSlotsView.as_view(), name='available-slots'),
-    path('bookings/', CreateBookingView.as_view(), name='create-booking'),
+    path('create-booking/', CreateBookingView.as_view(), name='create-booking'),
     path('my-bookings/', UserBookingsView.as_view(), name='user-bookings'),
     path('my-bookings/<int:pk>/', BookingDetailView.as_view(), name='booking-detail'),
 
