@@ -286,17 +286,53 @@ export default function AddNewRestaurantPage() {
       alert("Please go back and set your restaurant's location before submitting.");
       return;
     }
-    // Create a new FormData object for multipart/form-data submission
     
+    // Create a FormData object for multipart/form-data submission
+    const formDataToSend = new FormData();
+    
+    // Add all text fields
+    if (user?.user_id) {
+      formDataToSend.append('manager_id', user.user_id);
+    }
+    formDataToSend.append('name', formData.name);
+    formDataToSend.append('cuisine_type', formData.cuisine_type);
+    formDataToSend.append('cost_per_person', formData.cost_per_person);
+    formDataToSend.append('description', formData.description);
+    formDataToSend.append('address', formData.address);
+    formDataToSend.append('city', formData.city);
+    formDataToSend.append('state', formData.state);
+    formDataToSend.append('zipcode', formData.zipcode);
+    formDataToSend.append('contact_info', formData.contact_info);
+    formDataToSend.append('opening_time', formData.opening_time);
+    formDataToSend.append('closing_time', formData.closing_time);
+    
+    // Add array fields
+    formData.days_open.forEach(day => {
+      formDataToSend.append('days_open', day);
+    });
+    
+    formData.table_sizes.forEach(size => {
+      formDataToSend.append('table_sizes', size);
+    });
+    
+    // Add location data
+    if (formData.location) {
+      formDataToSend.append('location_lat', formData.location.lat.toString());
+      formDataToSend.append('location_lng', formData.location.lng.toString());
+    }
+    
+    // Add photo files
+    formData.photos.forEach(photo => {
+      formDataToSend.append('photos', photo);
+    });
     
     try {
       const response = await fetch('http://192.168.1.115:8000/api/restaurants/create/', {
         method: 'POST',
-        body: JSON.stringify({   manager_id: user?.user_id,
-                                 ...formData}),
+        body: formDataToSend,
         headers: {
-          'Content-Type': 'application/json',
           'Authorization': `Bearer ${tokens?.access}`
+          // Don't set 'Content-Type' header, the browser will set it with the correct boundary for FormData
         }
       });
       
@@ -312,11 +348,6 @@ export default function AddNewRestaurantPage() {
       console.error("Failed to submit restaurant data:", error);
       alert("Failed to submit restaurant data. Please try again.");
     }
-
-    
-    console.log("Form submitted:", formData);
-    // Here you would typically send the data to your API
-    alert("Restaurant registration submitted successfully!");
   };
   
   return (
