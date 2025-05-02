@@ -14,6 +14,7 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from datetime import datetime, timedelta
 import pytz
 from django.utils import timezone
+from .utils import send_booking_confirmation_email
 
 # BookingSlot Views
 class BookingSlotListCreateView(generics.ListCreateAPIView):
@@ -248,6 +249,21 @@ class CreateBookingView(APIView):
             restaurant = slot.restaurant_id
             restaurant.times_booked_today += 1
             restaurant.save()
+            
+            # Send confirmation email
+            booking_details = {
+                'restaurant_name': restaurant.name,
+                'booking_date': slot.slot_datetime.strftime('%Y-%m-%d'),
+                'booking_time': slot.slot_datetime.strftime('%I:%M %p'),
+                'number_of_people': number_of_people,
+                'booking_id': booking.booking_id
+            }
+            
+            send_booking_confirmation_email(
+                user_email=request.user.email,
+                user_name=request.user.username,
+                booking_details=booking_details
+            )
             
             # Return the created booking
             booking_serializer = BookingSerializer(booking)
