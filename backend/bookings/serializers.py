@@ -4,10 +4,15 @@ from users.models import User
 from restaurants.models import Restaurant
 
 class BookingSerializer(serializers.ModelSerializer):
+    restaurant_id = serializers.SerializerMethodField()
+
     class Meta:
         model = Booking
-        fields = ['booking_id', 'customer_id', 'slot_id', 'booking_datetime', 'number_of_people', 'status']
-        read_only_fields = ['booking_id', 'customer_id', 'booking_datetime']
+        fields = ['booking_id', 'customer_id', 'slot_id', 'booking_datetime', 'number_of_people', 'status', 'restaurant_id']
+        read_only_fields = ['booking_id', 'customer_id', 'booking_datetime', 'restaurant_id']
+
+    def get_restaurant_id(self, obj):
+        return obj.slot_id.restaurant_id.restaurant_id
 
 class BookingCreateSerializer(serializers.ModelSerializer):
     class Meta:
