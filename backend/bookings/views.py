@@ -289,6 +289,34 @@ class BookingDetailView(generics.RetrieveUpdateDestroyAPIView):
             'error': 'Only cancelling bookings is allowed'
         }, status=status.HTTP_400_BAD_REQUEST)
 
+class CancelBookingView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def post(self, request, booking_id):
+        try:
+            booking = Booking.objects.get(booking_id=booking_id, customer_id=request.user)
+        except Booking.DoesNotExist:
+            return Response({
+                'error': 'Booking not found'
+            }, status=status.HTTP_404_NOT_FOUND)
+        
+        if booking.status == 'Cancelled':
+            return Response({
+                'error': 'Booking is already cancelled'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Update booking status
+        booking.status = 'Cancelled'
+        booking.save()
+        
+        # Decrement the restaurant's times_booked_today counter
+        restaurant = booking.slot_id.restaurant_id
+        restaurant.times_booked_today = max(0, restaurant.times_booked_today - 1)
+        restaurant.save()
+        
+        serializer = BookingSerializer(booking)
+        return Response(serializer.data)
+
 class ReviewCreateView(APIView):
     permission_classes = [permissions.IsAuthenticated]
     authentication_classes = [JWTAuthentication]
