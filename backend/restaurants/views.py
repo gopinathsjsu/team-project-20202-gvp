@@ -294,6 +294,59 @@ class RestaurantSearchView(APIView):
 
         return Response(results, status=status.HTTP_200_OK)
 
+class HotRestaurantsView(APIView):
+    permission_classes = [AllowAny]
+    authentication_classes = [JWTAuthentication]
+
+    def get(self, request):
+        # Get pagination parameters
+        page = int(request.query_params.get('page', 1))
+        page_size = int(request.query_params.get('pageSize', 12))
+        
+        # Get approved restaurants sorted by most booked first
+        restaurants = Restaurant.objects.filter(approved=True).order_by('-times_booked_today')
+        
+        # Calculate pagination
+        start_index = (page - 1) * page_size
+        end_index = start_index + page_size
+        paginated_restaurants = restaurants[start_index:end_index]
+        
+        # Get total count for pagination metadata
+        total_count = restaurants.count()
+        total_pages = (total_count + page_size - 1) // page_size  # Ceiling division
+        
+        # Get restaurant information
+        results = []
+        for restaurant in paginated_restaurants:
+            # Get average rating
+            avg_rating = Review.objects.filter(restaurant_id=restaurant).aggregate(Avg('rating'))['rating__avg'] or 0
+            
+            # Get restaurant photos
+            photos = RestaurantPhoto.objects.filter(restaurant_id=restaurant)
+            photo_urls = [photo.photo_url for photo in photos]
+            
+            results.append({
+                'id': restaurant.restaurant_id,
+                'name': restaurant.name,
+                'cuisine': restaurant.cuisine_type,
+                'ratePerPerson': restaurant.cost_rating,
+                'rating': round(avg_rating, 1),
+                'imageURL': photo_urls[0] if photo_urls else [],  # Return only the first photo
+                'times_booked_today': restaurant.times_booked_today
+            })
+        
+        response_data = {
+            'results': results,
+            'pagination': {
+                'currentPage': page,
+                'totalPages': total_pages,
+                'totalCount': total_count,
+                'pageSize': page_size
+            }
+        }
+        
+        return Response(response_data, status=status.HTTP_200_OK)
+
 class ManagerRestaurantsView(generics.ListAPIView):
     serializer_class = RestaurantSerializer
     permission_classes = [permissions.IsAuthenticated, IsRestaurantManager]

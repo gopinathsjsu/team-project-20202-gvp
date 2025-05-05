@@ -299,8 +299,10 @@ export default function EditRestaurantPage() {
         state: formData.state,
         zipcode: formData.zipcode,
         contact_info: formData.contact_info,
-        latitude: formData.location?.lat.toString(),
-        longitude: formData.location?.lng.toString(),
+        location: formData.location ? {
+          lat: formData.location.lat,
+          lng: formData.location.lng
+        } : null,
         opening_time: formData.opening_time,
         closing_time: formData.closing_time,
         days_open: formData.days_open

@@ -8,6 +8,7 @@ interface Restaurant {
   cuisine: string;
   rating: number;
   ratePerPerson: number;
+  times_booked_today?: number;
 }
 
 export interface SearchState {
@@ -18,6 +19,13 @@ export interface SearchState {
   searchQuery?: string;
 }
 
+export interface PaginationState {
+  currentPage: number;
+  totalPages: number;
+  totalCount: number;
+  pageSize: number;
+}
+
 interface RestaurantContextType {
   restaurants: Restaurant[];
   setRestaurants: React.Dispatch<React.SetStateAction<Restaurant[]>>;
@@ -26,6 +34,8 @@ interface RestaurantContextType {
   isLoading: boolean;
   error: string | null;
   searchForRestaurants: () => Promise<void>;
+  fetchHotRestaurants: (page: number, pageSize: number) => Promise<void>;
+  pagination: PaginationState;
 }
 
 const RestaurantContext = createContext<RestaurantContextType | undefined>(undefined);
@@ -58,6 +68,12 @@ export const RestaurantProvider = ({ children }: { children: ReactNode }) => {
   
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [pagination, setPagination] = useState<PaginationState>({
+    currentPage: 1,
+    totalPages: 1,
+    totalCount: 0,
+    pageSize: 12
+  });
 
   const searchForRestaurants = async () => {
     try {
@@ -103,6 +119,43 @@ export const RestaurantProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const fetchHotRestaurants = async (page: number = 1, pageSize: number = 12) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      // For GET requests with query parameters
+      const params = new URLSearchParams({
+        page: page.toString(),
+        pageSize: pageSize.toString()
+      });
+      
+      const url = `http://192.168.1.115:8000/api/restaurants/hot/?${params.toString()}`;
+      
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch hot restaurants');
+      }
+      
+      const data = await response.json();
+      console.log('Hot restaurants data:', data);
+      
+      setRestaurants(data.results);
+      setPagination(data.pagination);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An unknown error occurred');
+      console.error('Error fetching hot restaurants:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <RestaurantContext.Provider
       value={{
@@ -113,6 +166,8 @@ export const RestaurantProvider = ({ children }: { children: ReactNode }) => {
         isLoading,
         error,
         searchForRestaurants,
+        fetchHotRestaurants,
+        pagination
       }}
     >
       {children}

@@ -2,7 +2,7 @@ from django.urls import path
 from .views import (
     RestaurantCreateView, RestaurantListView, RestaurantDetailView,
     RestaurantSearchView, RestaurantTimeSlotsView, ManagerRestaurantsView,
-    RestaurantUpdateView
+    RestaurantUpdateView, HotRestaurantsView
 )
 from .admin_views import (
     UnapprovedRestaurantListView, ApprovedRestaurantListView,
@@ -16,6 +16,7 @@ urlpatterns = [
     path('update/', RestaurantUpdateView.as_view(), name='restaurant-update'),
     path('<int:restaurant_id>/time-slots/', RestaurantTimeSlotsView.as_view(), name='restaurant-time-slots'),
     path('search/', RestaurantSearchView.as_view(), name='restaurant-search'),
+    path('hot/', HotRestaurantsView.as_view(), name='hot-restaurants'),
     path('my-restaurants/', ManagerRestaurantsView.as_view(), name='manager-restaurants'),
     
     # Admin URLs
