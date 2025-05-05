@@ -1,5 +1,6 @@
 "use client";
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
+import { getApiUrl } from '@/lib/config';
 
 interface Restaurant {
   id: string;
@@ -18,6 +19,13 @@ export interface SearchState {
   searchQuery?: string;
 }
 
+interface PaginationState {
+  page: number;
+  pageSize: number;
+  totalPages: number;
+  totalItems?: number;
+}
+
 interface RestaurantContextType {
   restaurants: Restaurant[];
   setRestaurants: React.Dispatch<React.SetStateAction<Restaurant[]>>;
@@ -26,6 +34,11 @@ interface RestaurantContextType {
   isLoading: boolean;
   error: string | null;
   searchForRestaurants: () => Promise<void>;
+  pagination: PaginationState;
+  fetchHotRestaurants: (currentPage: number) => Promise<void>;
+  nextPage: () => void;
+  prevPage: () => void;
+  isSearchActive: boolean;
 }
 
 const RestaurantContext = createContext<RestaurantContextType | undefined>(undefined);
@@ -39,14 +52,7 @@ export const useRestaurant = () => {
 };
 
 export const RestaurantProvider = ({ children }: { children: ReactNode }) => {
-  const [restaurants, setRestaurants] = useState<Restaurant[]>([
-    {id:"1",name: "Restaurant 1", imageURL: "/restaurant.jpg", cuisine: "Italian", rating: 4.5, ratePerPerson: 100},
-    {id:"2",name: "Restaurant 2", imageURL: "/restaurant.jpg", cuisine: "Italian", rating: 4.5, ratePerPerson: 100},
-    {id:"3",name: "Restaurant 3", imageURL: "/restaurant.jpg", cuisine: "Italian", rating: 4.5, ratePerPerson: 100},
-    {id:"4",name: "Restaurant 4", imageURL: "/restaurant.jpg", cuisine: "Italian", rating: 4.5, ratePerPerson: 100},
-    {id:"5",name: "Restaurant 5", imageURL: "/restaurant.jpg", cuisine: "Italian", rating: 4.5, ratePerPerson: 100},
-    {id:"6",name: "Restaurant 6", imageURL: "/restaurant.jpg", cuisine: "Italian", rating: 4.5, ratePerPerson: 100},
-  ]);
+  const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   
   const [searchState, setSearchState] = useState<SearchState>({
     location: 'San Francisco',
@@ -56,15 +62,301 @@ export const RestaurantProvider = ({ children }: { children: ReactNode }) => {
     searchQuery: '',
   });
   
+  const [pagination, setPagination] = useState<PaginationState>({
+    page: 1,
+    pageSize: 12,
+    totalPages: 1
+  });
+  
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [isSearchActive, setIsSearchActive] = useState<boolean>(false);
 
-  const searchForRestaurants = async () => {
+  // Fetch hot restaurants when component mounts
+  useEffect(() => {
+    fetchHotRestaurants(pagination.page);
+  }, []);
+
+  // Use useCallback for functions passed as props
+  const fetchHotRestaurants = useCallback(async (currentPage: number) => {
     try {
       setIsLoading(true);
       setError(null);
+      setIsSearchActive(false);
       
-      console.log("Searching for restaurants with state:", searchState);
+      // Get the current page at the time of the call
+      // const currentPage = pagination.page;
+      
+      const url = getApiUrl(`restaurants/hot/?page=${currentPage}&pageSize=${pagination.pageSize}`);
+      console.log("Fetching hot restaurants from URL with page=", currentPage, ":", url);
+      
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch hot restaurants');
+      }
+      
+      const data = await response.json();
+      console.log("Hot restaurants API response:", data);
+      
+      // Check for results array or direct data
+      if (data.results) {
+        setRestaurants(data.results);
+      } else if (Array.isArray(data)) {
+        setRestaurants(data);
+      } else {
+        // If neither, assume it's the restaurants array itself
+        setRestaurants(data);
+      }
+      
+      // Update pagination based on API response format
+      if (data.pagination) {
+        // Handle the standard pagination object format
+        console.log("Found pagination object:", data.pagination);
+        setPagination(prev => ({
+          ...prev,
+          page: data.pagination.currentPage || currentPage,
+          totalPages: data.pagination.totalPages || 1,
+          pageSize: data.pagination.pageSize || prev.pageSize,
+          totalItems: data.pagination.totalCount
+        }));
+      } else if (data.totalPages) {
+        // Handle direct pagination properties
+        console.log("Found direct pagination properties, totalPages:", data.totalPages);
+        setPagination(prev => ({
+          ...prev,
+          page: currentPage,
+          totalPages: data.totalPages
+        }));
+      } else if (data.count) {
+        // Some APIs return count instead of totalPages
+        const totalPages = Math.ceil(data.count / pagination.pageSize);
+        console.log("Calculating totalPages from count:", data.count, "=", totalPages);
+        setPagination(prev => ({
+          ...prev,
+          page: currentPage,
+          totalPages: totalPages,
+          totalItems: data.count
+        }));
+      } else {
+        // If we can't determine pagination, use the results length
+        console.log("No pagination data found, using results length for single page");
+        setPagination(prev => ({
+          ...prev,
+          page: currentPage,
+          totalPages: 1
+        }));
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An unknown error occurred');
+      console.error('Error fetching hot restaurants:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [pagination.pageSize]);
+
+  const nextPage = useCallback(() => {
+    console.log("Next page clicked. Current page:", pagination.page, "Total pages:", pagination.totalPages);
+    
+    if (pagination.page < pagination.totalPages) {
+      const nextPageNum = pagination.page + 1;
+      console.log("Moving to next page:", nextPageNum);
+      
+      if (isSearchActive) {
+        // Use the updated page when making the API call
+        const params = new URLSearchParams({
+          city: searchState.location,
+          date: searchState.date ? new Date(searchState.date).toISOString().split('T')[0] : '',
+          time: searchState.time,
+          people: searchState.people.toString(),
+          page: String(nextPageNum),
+          pageSize: String(pagination.pageSize)
+        });
+        
+        // Add searchQuery if it exists
+        if (searchState.searchQuery) {
+          params.append('query', searchState.searchQuery);
+        }
+        
+        const url = getApiUrl(`restaurants/search/?${params.toString()}`);
+        console.log("Fetching next page from URL with page=", nextPageNum, ":", url);
+        
+        setIsLoading(true);
+        fetch(url, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        })
+        .then(response => {
+          if (!response.ok) throw new Error('Failed to fetch restaurants');
+          return response.json();
+        })
+        .then(data => {
+          console.log("Next page response:", data);
+          
+          // Update restaurants data
+          if (data.results) {
+            setRestaurants(data.results);
+          } else if (Array.isArray(data)) {
+            setRestaurants(data);
+          } else {
+            setRestaurants(data);
+          }
+          
+          // Update pagination state AFTER getting the response
+          if (data.pagination) {
+            console.log("Setting page from pagination response:", data.pagination.currentPage || nextPageNum);
+            setPagination(prev => ({
+              ...prev,
+              page: data.pagination.currentPage || nextPageNum,
+              totalPages: data.pagination.totalPages || prev.totalPages,
+              pageSize: data.pagination.pageSize || prev.pageSize,
+              totalItems: data.pagination.totalCount || prev.totalItems
+            }));
+          } else {
+            // If no pagination data in response, at least update the page number
+            console.log("No pagination in response, setting page to:", nextPageNum);
+            setPagination(prev => ({
+              ...prev,
+              page: nextPageNum
+            }));
+          }
+        })
+        .catch(err => {
+          setError(err instanceof Error ? err.message : 'An unknown error occurred');
+          console.error('Error fetching next page:', err);
+          // Reset pagination on error
+          setPagination(prev => ({
+            ...prev,
+            page: pagination.page // Stay on current page
+          }));
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
+      } else {
+        // For hot restaurants, update page before fetch
+        console.log(nextPageNum)
+        setPagination(prev => ({
+          ...prev,
+          page: nextPageNum
+        }));
+        fetchHotRestaurants(nextPageNum);
+      }
+    } else {
+      console.log("Already at last page, not proceeding");
+    }
+  }, [isSearchActive, pagination.page, pagination.pageSize, pagination.totalPages, searchState, fetchHotRestaurants]);
+
+  const prevPage = useCallback(() => {
+    console.log("Previous page clicked. Current page:", pagination.page);
+    
+    if (pagination.page > 1) {
+      const prevPageNum = pagination.page - 1;
+      console.log("Moving to previous page:", prevPageNum);
+      
+      if (isSearchActive) {
+        // Use the updated page when making the API call
+        const params = new URLSearchParams({
+          city: searchState.location,
+          date: searchState.date ? new Date(searchState.date).toISOString().split('T')[0] : '',
+          time: searchState.time,
+          people: searchState.people.toString(),
+          page: String(prevPageNum),
+          pageSize: String(pagination.pageSize)
+        });
+        
+        // Add searchQuery if it exists
+        if (searchState.searchQuery) {
+          params.append('query', searchState.searchQuery);
+        }
+        
+        const url = getApiUrl(`restaurants/search/?${params.toString()}`);
+        console.log("Fetching previous page from URL with page=", prevPageNum, ":", url);
+        
+        setIsLoading(true);
+        fetch(url, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        })
+        .then(response => {
+          if (!response.ok) throw new Error('Failed to fetch restaurants');
+          return response.json();
+        })
+        .then(data => {
+          console.log("Previous page response:", data);
+          
+          // Update restaurants data
+          if (data.results) {
+            setRestaurants(data.results);
+          } else if (Array.isArray(data)) {
+            setRestaurants(data);
+          } else {
+            setRestaurants(data);
+          }
+          
+          // Update pagination state AFTER getting the response
+          if (data.pagination) {
+            console.log("Setting page from pagination response:", data.pagination.currentPage || prevPageNum);
+            setPagination(prev => ({
+              ...prev,
+              page: data.pagination.currentPage || prevPageNum,
+              totalPages: data.pagination.totalPages || prev.totalPages,
+              pageSize: data.pagination.pageSize || prev.pageSize,
+              totalItems: data.pagination.totalCount || prev.totalItems
+            }));
+          } else {
+            // If no pagination data in response, at least update the page number
+            console.log("No pagination in response, setting page to:", prevPageNum);
+            setPagination(prev => ({
+              ...prev,
+              page: prevPageNum
+            }));
+          }
+        })
+        .catch(err => {
+          setError(err instanceof Error ? err.message : 'An unknown error occurred');
+          console.error('Error fetching previous page:', err);
+          // Reset pagination on error
+          setPagination(prev => ({
+            ...prev,
+            page: pagination.page // Stay on current page
+          }));
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
+      } else {
+        // For hot restaurants, update page before fetch
+        setPagination(prev => ({
+          ...prev,
+          page: prevPageNum
+        }));
+        fetchHotRestaurants(prevPageNum);
+      }
+    } else {
+      console.log("Already at first page, not proceeding");
+    }
+  }, [isSearchActive, pagination.page, pagination.pageSize, searchState, fetchHotRestaurants]);
+
+  const searchForRestaurants = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      setIsSearchActive(true);
+      
+      // Reset to page 1 for new searches
+      const currentPage = 1;
+      
+      console.log("Searching for restaurants with state:", searchState, "Page:", currentPage);
       
       // For GET requests with query parameters
       const params = new URLSearchParams({
@@ -72,14 +364,17 @@ export const RestaurantProvider = ({ children }: { children: ReactNode }) => {
         date: searchState.date ? new Date(searchState.date).toISOString().split('T')[0] : '',
         time: searchState.time,
         people: searchState.people.toString(),
-      });
-      console.log(params)
+        page: String(currentPage),
+        pageSize: String(pagination.pageSize)
+      });    
       
-    //   if (searchState.searchQuery) {
-    //     params.append('searchQuery', searchState.searchQuery);
-    //   }
+      // Add searchQuery if it exists
+      if (searchState.searchQuery) {
+        params.append('query', searchState.searchQuery);
+      }
       
-      const url = `http://192.168.1.115:8000/api/restaurants/search/?${params.toString()}`;
+      const url = getApiUrl(`restaurants/search/?${params.toString()}`);
+      console.log("Search URL with page=", currentPage, ":", url);
       
       const response = await fetch(url, {
         method: 'GET',
@@ -93,15 +388,81 @@ export const RestaurantProvider = ({ children }: { children: ReactNode }) => {
       }
       
       const data = await response.json();
-      console.log(data)
-      setRestaurants(data);
+      console.log("Search API response:", data);
+      
+      // Check for results array or direct data
+      if (data.results) {
+        setRestaurants(data.results);
+      } else if (Array.isArray(data)) {
+        setRestaurants(data);
+      } else {
+        // If neither, assume it's the restaurants array itself
+        setRestaurants(data);
+      }
+      
+      // Update pagination based on API response format
+      if (data.pagination) {
+        // Handle the standard pagination object format
+        console.log("Found pagination object:", data.pagination);
+        setPagination(prev => ({
+          ...prev,
+          page: data.pagination.currentPage || currentPage,
+          totalPages: data.pagination.totalPages || 1,
+          pageSize: data.pagination.pageSize || prev.pageSize,
+          totalItems: data.pagination.totalCount
+        }));
+      } else if (data.totalPages) {
+        // Handle direct pagination properties
+        console.log("Found direct pagination properties, totalPages:", data.totalPages);
+        setPagination(prev => ({
+          ...prev,
+          page: currentPage,
+          totalPages: data.totalPages
+        }));
+      } else if (data.count) {
+        // Some APIs return count instead of totalPages
+        const totalPages = Math.ceil(data.count / pagination.pageSize);
+        console.log("Calculating totalPages from count:", data.count, "=", totalPages);
+        setPagination(prev => ({
+          ...prev,
+          page: currentPage,
+          totalPages: totalPages,
+          totalItems: data.count
+        }));
+      } else {
+        // If the API doesn't return pagination info, use the length of results
+        const totalResults = Array.isArray(data.results) ? data.results.length : (Array.isArray(data) ? data.length : 0);
+        console.log("No pagination data found, using results length:", totalResults);
+        
+        if (totalResults === 0) {
+          setPagination(prev => ({
+            ...prev,
+            page: currentPage,
+            totalPages: 1
+          }));
+        } else if (totalResults >= pagination.pageSize) {
+          // If we have a full page, assume there might be more pages
+          setPagination(prev => ({
+            ...prev,
+            page: currentPage,
+            totalPages: currentPage + 1
+          }));
+        } else {
+          // If we have a partial page, this is the last page
+          setPagination(prev => ({
+            ...prev,
+            page: currentPage,
+            totalPages: currentPage
+          }));
+        }
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unknown error occurred');
       console.error('Error searching for restaurants:', err);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [pagination.pageSize, searchState]);
 
   return (
     <RestaurantContext.Provider
@@ -113,6 +474,11 @@ export const RestaurantProvider = ({ children }: { children: ReactNode }) => {
         isLoading,
         error,
         searchForRestaurants,
+        pagination,
+        fetchHotRestaurants,
+        nextPage,
+        prevPage,
+        isSearchActive
       }}
     >
       {children}

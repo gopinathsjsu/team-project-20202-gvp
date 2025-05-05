@@ -10,6 +10,7 @@ import Image from "next/image";
 import Script from "next/script";
 import { ProtectedRoute } from "../components/ProtectedRoute";
 import { useAuth } from "@/context/AuthContext";
+import { getApiUrl } from "@/lib/config";
 // Add Google Maps types
 interface GoogleMapMouseEvent {
   latLng: {
@@ -327,7 +328,7 @@ export default function AddNewRestaurantPage() {
     });
     
     try {
-      const response = await fetch('http://192.168.1.115:8000/api/restaurants/create/', {
+      const response = await fetch(getApiUrl('restaurants/create/'), {
         method: 'POST',
         body: formDataToSend,
         headers: {

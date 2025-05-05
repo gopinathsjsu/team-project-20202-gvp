@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
+import { getApiUrl } from "@/lib/config";
 
 // Define interfaces for dashboard data
 interface TopRestaurant {
@@ -43,7 +44,8 @@ const AdminDashboard = () => {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const response = await fetch("http://192.168.1.115:8000/api/restaurants/admin/dashboard/", {
+        setLoading(true);
+        const response = await fetch(getApiUrl("restaurants/admin/dashboard/"), {
           headers: {
             Authorization: `Bearer ${tokens?.access}`,
           },
@@ -63,10 +65,10 @@ const AdminDashboard = () => {
       }
     };
 
-    if (isAuthenticated && tokens?.access) {
+    if (isAuthenticated && tokens && user?.role === 'admin') {
       fetchDashboardData();
     }
-  }, [isAuthenticated, tokens?.access]);
+  }, [isAuthenticated, tokens, user]);
 
   if (loading) {
     return <div className="p-8 text-center">Loading dashboard data...</div>;
