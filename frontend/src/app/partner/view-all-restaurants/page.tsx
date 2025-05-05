@@ -8,6 +8,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { getApiUrl } from "@/lib/config";
 
 interface Restaurant {
   restaurant_id: number;
@@ -58,9 +59,10 @@ export default function ViewAllRestaurants() {
       }
 
       try {
-        const response = await fetch("http://192.168.1.115:8000/api/restaurants/my-restaurants/", {
+        setLoading(true);
+        const response = await fetch(getApiUrl("restaurants/my-restaurants/"), {
           headers: {
-            Authorization: `Bearer ${tokens.access}`,
+            Authorization: `Bearer ${tokens?.access}`,
           },
         });
 
@@ -100,7 +102,7 @@ export default function ViewAllRestaurants() {
     }
 
     try {
-      const response = await fetch("http://192.168.1.115:8000/api/bookings/slots/recurring/", {
+      const response = await fetch(getApiUrl("bookings/slots/recurring/"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

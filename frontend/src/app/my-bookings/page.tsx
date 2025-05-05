@@ -33,6 +33,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { getApiUrl } from "@/lib/config";
 
 interface Booking {
   booking_id: number;
@@ -81,7 +82,7 @@ export default function MyBookingsPage() {
   const fetchBookings = async () => {
     try {
       setLoading(true);
-      const response = await fetch("http://192.168.1.115:8000/api/bookings/my-bookings/", {
+      const response = await fetch(getApiUrl("bookings/my-bookings/"), {
         headers: {
           Authorization: `Bearer ${tokens?.access}`,
         },
@@ -98,7 +99,7 @@ export default function MyBookingsPage() {
         data.map(async (booking: Booking) => {
           try {
             const restaurantResponse = await fetch(
-              `http://192.168.1.115:8000/api/restaurants/${booking.restaurant_id}`,
+              getApiUrl(`restaurants/${booking.restaurant_id}`),
               {
                 headers: {
                   Authorization: `Bearer ${tokens?.access}`,
@@ -148,7 +149,7 @@ export default function MyBookingsPage() {
     
     try {
       setCancellingBooking(true);
-      const response = await fetch(`http://192.168.1.115:8000/api/bookings/my-bookings/${bookingToCancel}/cancel/`, {
+      const response = await fetch(getApiUrl(`bookings/my-bookings/${bookingToCancel}/cancel/`), {
         method: "POST",
         headers: {
           Authorization: `Bearer ${tokens?.access}`,

@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
+import { getApiUrl } from "@/lib/config";
 
 // Define restaurant interface
 interface Restaurant {
@@ -79,12 +80,15 @@ export default function ApproveRestaurantsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [approving, setApproving] = useState<Record<number, boolean>>({});
+  const [removing, setRemoving] = useState<Record<number, boolean>>({});
 
   // Fetch unapproved restaurants
   useEffect(() => {
     const fetchUnapprovedRestaurants = async () => {
       try {
-        const response = await fetch("http://192.168.1.115:8000/api/restaurants/admin/unapproved/", {
+        setLoading(true);
+        const response = await fetch(getApiUrl("restaurants/admin/unapproved/"), {
           headers: {
             Authorization: `Bearer ${tokens?.access}`,
           },
@@ -119,7 +123,8 @@ export default function ApproveRestaurantsPage() {
   // Handle approve restaurant
   const handleApprove = async (restaurantId: number) => {
     try {
-      const response = await fetch(`http://192.168.1.115:8000/api/restaurants/admin/approve/${restaurantId}/`, {
+      setApproving((prev) => ({ ...prev, [restaurantId]: true }));
+      const response = await fetch(getApiUrl(`restaurants/admin/approve/${restaurantId}/`), {
         method: "POST",
         headers: {
           Authorization: `Bearer ${tokens?.access}`,
@@ -153,7 +158,8 @@ export default function ApproveRestaurantsPage() {
   // Handle disapprove (delete) restaurant
   const handleDisapprove = async (restaurantId: number) => {
     try {
-      const response = await fetch(`http://192.168.1.115:8000/api/restaurants/admin/remove/${restaurantId}/`, {
+      setRemoving((prev) => ({ ...prev, [restaurantId]: true }));
+      const response = await fetch(getApiUrl(`restaurants/admin/remove/${restaurantId}/`), {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${tokens?.access}`,

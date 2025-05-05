@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
+import { getApiUrl } from "@/lib/config";
 
 // Define restaurant interface
 interface Restaurant {
@@ -102,12 +103,14 @@ export default function ManageRestaurantsPage() {
   const [successMessage, setSuccessMessage] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredRestaurants, setFilteredRestaurants] = useState<Restaurant[]>([]);
+  const [removing, setRemoving] = useState<Record<number, boolean>>({});
 
   // Fetch approved restaurants
   useEffect(() => {
     const fetchApprovedRestaurants = async () => {
       try {
-        const response = await fetch("http://192.168.1.115:8000/api/restaurants/admin/approved/", {
+        setLoading(true);
+        const response = await fetch(getApiUrl("restaurants/admin/approved/"), {
           headers: {
             Authorization: `Bearer ${tokens?.access}`,
           },
@@ -157,7 +160,8 @@ export default function ManageRestaurantsPage() {
   // Handle delete restaurant
   const handleDelete = async (restaurantId: number) => {
     try {
-      const response = await fetch(`http://192.168.1.115:8000/api/restaurants/admin/remove/${restaurantId}/`, {
+      setRemoving((prev) => ({ ...prev, [restaurantId]: true }));
+      const response = await fetch(getApiUrl(`restaurants/admin/remove/${restaurantId}/`), {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${tokens?.access}`,

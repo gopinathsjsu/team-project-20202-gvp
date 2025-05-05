@@ -11,6 +11,7 @@ import { CalendarIcon, Users, Star, Utensils, DollarSign, MapPin, Phone, Chevron
 import { Loader2 } from "lucide-react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Script from "next/script";
+import { getApiUrl } from "@/lib/config";
 
 // Add Google Maps types
 interface GoogleMapMouseEvent {
@@ -118,7 +119,7 @@ export default function RestaurantDetailPage() {
   
   // Format currency based on cost rating
   const formatCostRating = (rating: number) => {
-    return "$".repeat(rating);
+    return `$${rating}`;
   };
 
   // Format date for reviews
@@ -188,7 +189,7 @@ export default function RestaurantDetailPage() {
     const fetchRestaurant = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`http://192.168.1.115:8000/api/restaurants/${params.restaurant_id}`, {
+        const response = await fetch(getApiUrl(`restaurants/${params.restaurant_id}`), {
           headers: {
             ...(tokens?.access ? { Authorization: `Bearer ${tokens.access}` } : {}),
           },
@@ -281,7 +282,7 @@ export default function RestaurantDetailPage() {
         });
         
         const response = await fetch(
-          `http://192.168.1.115:8000/api/restaurants/${params.restaurant_id}/time-slots/?date=${formattedDate}&time=${selectedTime}&people=${partySize}`,
+          getApiUrl(`restaurants/${params.restaurant_id}/time-slots/?date=${formattedDate}&time=${selectedTime}&people=${partySize}`),
           {
             headers: {
               ...(tokens?.access ? { Authorization: `Bearer ${tokens.access}` } : {}),
@@ -331,7 +332,7 @@ export default function RestaurantDetailPage() {
     
     try {
       setSubmittingReview(true);
-      const response = await fetch(`http://192.168.1.115:8000/api/bookings/reviews/create/`, {
+      const response = await fetch(getApiUrl(`bookings/reviews/create/`), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -349,7 +350,7 @@ export default function RestaurantDetailPage() {
       }
       
       // Update the restaurant data to include the new review
-      const updatedResponse = await fetch(`http://192.168.1.115:8000/api/restaurants/${params.restaurant_id}`, {
+      const updatedResponse = await fetch(getApiUrl(`restaurants/${params.restaurant_id}`), {
         headers: {
           Authorization: `Bearer ${tokens.access}`
         }
