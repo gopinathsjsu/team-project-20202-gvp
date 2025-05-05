@@ -29,7 +29,7 @@ interface RestaurantForm {
   // Basic Info
   name: string;
   cuisine_type: string;
-  cost_per_person: string;
+  cost_rating: string;
   description: string;
   
   // Contact & Address
@@ -92,7 +92,7 @@ export default function AddNewRestaurantPage() {
   const [formData, setFormData] = useState<RestaurantForm>({
     name: "",
     cuisine_type: "",
-    cost_per_person: "",
+    cost_rating: "",
     description: "",
     address: "",
     city: "",
@@ -297,7 +297,7 @@ export default function AddNewRestaurantPage() {
     }
     formDataToSend.append('name', formData.name);
     formDataToSend.append('cuisine_type', formData.cuisine_type);
-    formDataToSend.append('cost_per_person', formData.cost_per_person);
+    formDataToSend.append('cost_rating', formData.cost_rating);
     formDataToSend.append('description', formData.description);
     formDataToSend.append('address', formData.address);
     formDataToSend.append('city', formData.city);
@@ -452,12 +452,12 @@ export default function AddNewRestaurantPage() {
                         </div>
                         
                         <div className="grid gap-3">
-                        <Label htmlFor="cost_per_person">Average Cost Per Person*</Label>
+                        <Label htmlFor="cost_rating">Cost Rating*</Label>
                         <Input
-                            id="cost_per_person"
-                            name="cost_per_person"
+                            id="cost_rating"
+                            name="cost_rating"
                             placeholder="$30"
-                            value={formData.cost_per_person}
+                            value={formData.cost_rating}
                             onChange={handleInputChange}
                             required
                         />

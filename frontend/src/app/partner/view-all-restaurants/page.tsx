@@ -144,7 +144,7 @@ export default function ViewAllRestaurants() {
   };
 
   const renderCostRating = (rating: number) => {
-    return "$".repeat(rating);
+    return "$"+rating;
   };
 
   if (loading) {
