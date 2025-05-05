@@ -1,0 +1,42 @@
+{
+    "name": "The Golden Plate",
+    "cuisine_type": "Italian",
+    "cost_rating": 3,
+    "description": "Authentic Italian cuisine in a warm, inviting atmosphere. Our chef brings traditional recipes from various regions of Italy, using locally sourced ingredients to create an unforgettable dining experience.",
+    "address": "123 Culinary Boulevard",
+    "city": "San Francisco",
+    "state": "CA",
+    "zipcode": "94103",
+    "contact_info": "+1 (415) 555-7890",
+    "days_open": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+    ],
+    "opening_time": "11:00:00",
+    "closing_time": "22:00:00",
+    "location": {
+        "lat": 37.7749,
+        "lng": -122.4194
+    },
+    "table_sizes": [2, 4, 6, 8],
+    "available_booking_times": [
+        "11:30:00",
+        "12:00:00",
+        "12:30:00",
+        "13:00:00",
+        "13:30:00",
+        "14:00:00",
+        "17:30:00",
+        "18:00:00",
+        "18:30:00",
+        "19:00:00",
+        "19:30:00",
+        "20:00:00",
+        "20:30:00",
+        "21:00:00"
+    ]
+} 
