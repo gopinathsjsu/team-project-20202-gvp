@@ -185,6 +185,14 @@ export default function AddNewRestaurantPage() {
     }
   };
   
+  // Handle photo deletion
+  const handleDeletePhoto = (index: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      photos: prev.photos.filter((_, i) => i !== index)
+    }));
+  };
+  
   // Handle Google Maps location selection
   const handleMapClick = (e: GoogleMapMouseEvent) => {
     const lat = e.latLng.lat();
@@ -687,12 +695,13 @@ export default function AddNewRestaurantPage() {
                         <div className="grid gap-3">
                         <Label htmlFor="photos">Restaurant Photos*</Label>
                         <p className="text-sm text-muted-foreground">Upload high-quality photos of your restaurant, food, and ambiance</p>
+                        <p className="text-xs text-amber-600 font-medium">Note: Only PNG, JPEG, and JPG file formats are accepted.</p>
                         <Input
                             id="photos"
                             name="photos"
                             type="file"
                             multiple
-                            accept="image/*"
+                            accept="image/png, image/jpeg, image/jpg"
                             onChange={handlePhotoUpload}
                             className="py-2"
                         />
@@ -702,13 +711,23 @@ export default function AddNewRestaurantPage() {
                             <p>Selected photos: {formData.photos.length}</p>
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2">
                                 {Array.from(formData.photos).map((photo, index) => (
-                                <div key={index} className="relative h-24 rounded-md overflow-hidden">
+                                <div key={index} className="relative h-24 rounded-md overflow-hidden group">
                                     <Image
                                     src={URL.createObjectURL(photo)}
                                     alt={`Restaurant photo ${index + 1}`}
                                     fill
                                     className="object-cover"
                                     />
+                                    <button
+                                    type="button"
+                                    onClick={() => handleDeletePhoto(index)}
+                                    className="absolute top-1 right-1 bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                                    aria-label="Delete photo"
+                                    >
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M18 6L6 18M6 6l12 12"></path>
+                                    </svg>
+                                    </button>
                                 </div>
                                 ))}
                             </div>
