@@ -207,8 +207,7 @@ class RestaurantSearchView(APIView):
         time_str = request.query_params.get('time')
         num_people = request.query_params.get('people')
         city = request.query_params.get('city')
-        state = request.query_params.get('state')
-        zip_code = request.query_params.get('zip')
+        search_query = request.query_params.get('query')  # New parameter for name/zip search
 
         if not all([date_str, time_str, num_people]):
             return Response({
@@ -231,10 +230,15 @@ class RestaurantSearchView(APIView):
         # Apply location filters if provided
         if city:
             restaurants = restaurants.filter(city__iexact=city)
-        if state:
-            restaurants = restaurants.filter(state__iexact=state)
-        if zip_code:
-            restaurants = restaurants.filter(zip=zip_code)
+        
+        # Handle search query (could be name or zip)
+        if search_query:
+            # Check if the query is a zip code (5 digits)
+            if search_query.isdigit() and len(search_query) == 5:
+                restaurants = restaurants.filter(zip=search_query)
+            else:
+                # If not a zip code, search in restaurant names
+                restaurants = restaurants.filter(name__icontains=search_query)
 
         # Get day of week for the search date
         day_of_week = search_datetime.strftime('%A')
@@ -265,10 +269,6 @@ class RestaurantSearchView(APIView):
                     close_minutes += 24 * 60  # Add 24 hours worth of minutes
                     if search_minutes < open_minutes:
                         search_minutes += 24 * 60  # Add 24 hours worth of minutes
-                
-                print(f"Search time: {search_time}, Minutes: {search_minutes}")
-                print(f"Open time: {hours.open_time}, Minutes: {open_minutes}")
-                print(f"Close time: {hours.close_time}, Minutes: {close_minutes}")
                 
                 if open_minutes <= search_minutes <= close_minutes:
                     open_restaurants.append(restaurant)
@@ -301,4 +301,93 @@ class ManagerRestaurantsView(generics.ListAPIView):
 
     def get_queryset(self):
         return Restaurant.objects.filter(manager_id=self.request.user)
+
+class HotRestaurantsView(APIView):
+    permission_classes = [AllowAny]
+    authentication_classes = [JWTAuthentication]
+
+    def get(self, request):
+        # Get pagination parameters
+        page = int(request.query_params.get('page', 1))
+        page_size = int(request.query_params.get('pageSize', 12))
+        
+        # Get all approved restaurants
+        restaurants = Restaurant.objects.filter(approved=True)
+        
+        # Build a list of restaurants with a "hotness score"
+        hot_restaurants = []
+        for restaurant in restaurants:
+            # Calculate average rating
+            reviews = Review.objects.filter(restaurant_id=restaurant)
+            avg_rating = reviews.aggregate(Avg('rating'))['rating__avg'] or 0
+            
+            # Get recent reviews (last 30 days)
+            thirty_days_ago = datetime.now() - timedelta(days=30)
+            recent_reviews = reviews.filter(created_at__gte=thirty_days_ago).count()
+            
+            # Get restaurant photos
+            photos = RestaurantPhoto.objects.filter(restaurant_id=restaurant)
+            photo_urls = [photo.photo_url for photo in photos]
+            
+            # Calculate a "hotness score" based on multiple factors:
+            # 1. Current bookings (40% weight)
+            # 2. Average rating (30% weight)
+            # 3. Recent review activity (30% weight)
+            booking_score = min(restaurant.times_booked_today * 10, 100)  # Cap at 100
+            rating_score = (avg_rating / 5) * 100  # Convert 0-5 rating to 0-100
+            recency_score = min(recent_reviews * 5, 100)  # Cap at 100
+            
+            hotness_score = (
+                (booking_score * 0.4) + 
+                (rating_score * 0.3) + 
+                (recency_score * 0.3)
+            )
+            
+            hot_restaurants.append({
+                'restaurant': restaurant,
+                'hotness_score': hotness_score,
+                'avg_rating': avg_rating,
+                'photo_urls': photo_urls
+            })
+        
+        # Sort restaurants by hotness score (descending)
+        hot_restaurants.sort(key=lambda x: x['hotness_score'], reverse=True)
+        
+        # Apply pagination
+        total_count = len(hot_restaurants)
+        total_pages = (total_count + page_size - 1) // page_size  # Ceiling division
+        
+        start_index = (page - 1) * page_size
+        end_index = min(start_index + page_size, total_count)
+        paginated_restaurants = hot_restaurants[start_index:end_index]
+        
+        # Format response
+        results = []
+        for item in paginated_restaurants:
+            restaurant = item['restaurant']
+            results.append({
+                'id': restaurant.restaurant_id,
+                'name': restaurant.name,
+                'cuisine': restaurant.cuisine_type,
+                'ratePerPerson': restaurant.cost_rating,
+                'rating': round(item['avg_rating'], 1),
+                'imageURL': item['photo_urls'][0] if item['photo_urls'] else [],
+                'hotness_score': round(item['hotness_score'], 2),
+                'times_booked_today': restaurant.times_booked_today,
+                'address': restaurant.address,
+                'city': restaurant.city,
+                'state': restaurant.state
+            })
+        
+        response_data = {
+            'results': results,
+            'pagination': {
+                'currentPage': page,
+                'totalPages': total_pages,
+                'totalCount': total_count,
+                'pageSize': page_size
+            }
+        }
+        
+        return Response(response_data, status=status.HTTP_200_OK)
     
