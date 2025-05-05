@@ -174,9 +174,9 @@ export function Form({
                          required 
                          value= {formState.password} 
                          onChange={handleFormChange}
-                         placeholder="Set a password"/>
+                         placeholder={type==="login"?"Enter your password":"Set a password"}/>
                 </div>
-                {      
+                {
                   type === "signup" ? (
                     <div className="grid gap-3">
                       <div className="flex items-center">
