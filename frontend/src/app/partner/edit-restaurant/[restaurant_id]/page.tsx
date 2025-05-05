@@ -288,7 +288,7 @@ export default function EditRestaurantPage() {
     }
     
     try {
-      setIsSubmitting(true);
+      // setIsSubmitting(true);
       
       // Only update fields that can be logically edited
       const updateData = {
