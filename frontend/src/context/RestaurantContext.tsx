@@ -62,6 +62,53 @@ export const RestaurantProvider = ({ children }: { children: ReactNode }) => {
     searchQuery: '',
   });
   
+  // Function to ensure time is in 24-hour format
+  const formatTimeTo24Hour = (timeStr: string): string => {
+    // If already in 24-hour format, return as is
+    if (timeStr.match(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/)) {
+      return timeStr;
+    }
+    
+    // Try to parse AM/PM format
+    const match = timeStr.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)?$/i);
+    if (match) {
+      let hours = parseInt(match[1], 10);
+      const minutes = match[2];
+      const period = match[3]?.toUpperCase();
+      
+      if (period === 'PM' && hours < 12) {
+        hours += 12;
+      } else if (period === 'AM' && hours === 12) {
+        hours = 0;
+      }
+      
+      // Format hours to have leading zero if needed
+      const formattedHours = hours.toString().padStart(2, '0');
+      return `${formattedHours}:${minutes}`;
+    }
+    
+    // If we can't parse, return the original string
+    return timeStr;
+  };
+  
+  // Wrap the setSearchState to ensure time is always in 24-hour format
+  const setSearchStateWithFormattedTime = useCallback((value: React.SetStateAction<SearchState>) => {
+    if (typeof value === 'function') {
+      setSearchState(prevState => {
+        const newState = value(prevState);
+        return {
+          ...newState,
+          time: formatTimeTo24Hour(newState.time)
+        };
+      });
+    } else {
+      setSearchState({
+        ...value,
+        time: formatTimeTo24Hour(value.time)
+      });
+    }
+  }, []);
+  
   const [pagination, setPagination] = useState<PaginationState>({
     page: 1,
     pageSize: 12,
@@ -168,11 +215,14 @@ export const RestaurantProvider = ({ children }: { children: ReactNode }) => {
       console.log("Moving to next page:", nextPageNum);
       
       if (isSearchActive) {
+        // Ensure time is in 24-hour format
+        const timeIn24HourFormat = formatTimeTo24Hour(searchState.time);
+        
         // Use the updated page when making the API call
         const params = new URLSearchParams({
           city: searchState.location,
           date: searchState.date ? new Date(searchState.date).toISOString().split('T')[0] : '',
-          time: searchState.time,
+          time: timeIn24HourFormat,
           people: searchState.people.toString(),
           page: String(nextPageNum),
           pageSize: String(pagination.pageSize)
@@ -252,7 +302,7 @@ export const RestaurantProvider = ({ children }: { children: ReactNode }) => {
     } else {
       console.log("Already at last page, not proceeding");
     }
-  }, [isSearchActive, pagination.page, pagination.pageSize, pagination.totalPages, searchState, fetchHotRestaurants]);
+  }, [isSearchActive, pagination.page, pagination.pageSize, pagination.totalPages, searchState, fetchHotRestaurants, formatTimeTo24Hour]);
 
   const prevPage = useCallback(() => {
     console.log("Previous page clicked. Current page:", pagination.page);
@@ -262,11 +312,14 @@ export const RestaurantProvider = ({ children }: { children: ReactNode }) => {
       console.log("Moving to previous page:", prevPageNum);
       
       if (isSearchActive) {
+        // Ensure time is in 24-hour format
+        const timeIn24HourFormat = formatTimeTo24Hour(searchState.time);
+        
         // Use the updated page when making the API call
         const params = new URLSearchParams({
           city: searchState.location,
           date: searchState.date ? new Date(searchState.date).toISOString().split('T')[0] : '',
-          time: searchState.time,
+          time: timeIn24HourFormat,
           people: searchState.people.toString(),
           page: String(prevPageNum),
           pageSize: String(pagination.pageSize)
@@ -345,7 +398,7 @@ export const RestaurantProvider = ({ children }: { children: ReactNode }) => {
     } else {
       console.log("Already at first page, not proceeding");
     }
-  }, [isSearchActive, pagination.page, pagination.pageSize, searchState, fetchHotRestaurants]);
+  }, [isSearchActive, pagination.page, pagination.pageSize, searchState, fetchHotRestaurants, formatTimeTo24Hour]);
 
   const searchForRestaurants = useCallback(async () => {
     try {
@@ -358,11 +411,14 @@ export const RestaurantProvider = ({ children }: { children: ReactNode }) => {
       
       console.log("Searching for restaurants with state:", searchState, "Page:", currentPage);
       
+      // Ensure time is in 24-hour format
+      const timeIn24HourFormat = formatTimeTo24Hour(searchState.time);
+      
       // For GET requests with query parameters
       const params = new URLSearchParams({
         city: searchState.location,
         date: searchState.date ? new Date(searchState.date).toISOString().split('T')[0] : '',
-        time: searchState.time,
+        time: timeIn24HourFormat,
         people: searchState.people.toString(),
         page: String(currentPage),
         pageSize: String(pagination.pageSize)
@@ -462,7 +518,7 @@ export const RestaurantProvider = ({ children }: { children: ReactNode }) => {
     } finally {
       setIsLoading(false);
     }
-  }, [pagination.pageSize, searchState]);
+  }, [pagination.pageSize, searchState, formatTimeTo24Hour]);
 
   return (
     <RestaurantContext.Provider
@@ -470,7 +526,7 @@ export const RestaurantProvider = ({ children }: { children: ReactNode }) => {
         restaurants,
         setRestaurants,
         searchState,
-        setSearchState,
+        setSearchState: setSearchStateWithFormattedTime,
         isLoading,
         error,
         searchForRestaurants,

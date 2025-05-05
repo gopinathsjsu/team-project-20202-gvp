@@ -78,6 +78,8 @@ interface Restaurant {
   city: string;
   state: string;
   zip: string;
+  latitude: number | null;
+  longitude: number | null;
   photos: string[];
   reviews: Review[];
   description: string;
@@ -203,18 +205,22 @@ export default function RestaurantDetailPage() {
         console.log("Restaurant data received:", {
           id: data.restaurant_id,
           name: data.name,
-          hasLocation: !!data.location,
-          location: data.location
+          latitude: data.latitude,
+          longitude: data.longitude,
+          photos: data.photos,
+          reviews: data.reviews,
         });
 
-        // Add fallback location if not provided in the data
-        if (!data.location) {
-          console.log("No location data found, using fallback location");
-          // Use a default location (San Francisco)
-          data.location = { lat: 37.7749, lng: -122.4194 };
-        }
+        // Transform API response to match our component's expected format
+        const transformedData = {
+          ...data,
+          // Convert latitude/longitude to location object for Google Maps
+          location: (data.latitude && data.longitude) 
+            ? { lat: parseFloat(data.latitude), lng: parseFloat(data.longitude) } 
+            : { lat: 37.7749, lng: -122.4194 } // Default to San Francisco if no coordinates
+        };
 
-        setRestaurant(data);
+        setRestaurant(transformedData);
         setLoading(false);
       } catch (err) {
         setError((err as Error).message || "An error occurred");
@@ -253,9 +259,12 @@ export default function RestaurantDetailPage() {
         fullscreenControl: true
       });
       
-      // Create marker at the restaurant location
+      // Create marker at the restaurant location using the exact coordinates from the API
       new window.google.maps.Marker({
-        position: restaurant.location,
+        position: {
+          lat: restaurant.location.lat,
+          lng: restaurant.location.lng
+        },
         map: map,
         draggable: false,
         animation: window.google.maps.Animation.DROP,
