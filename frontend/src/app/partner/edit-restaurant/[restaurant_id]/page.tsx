@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,7 @@ import Script from "next/script";
 import { ProtectedRoute } from "../../components/ProtectedRoute";
 import { useAuth } from "@/context/AuthContext";
 import { useParams, useRouter } from "next/navigation";
+import { getApiUrl } from "@/lib/config";
 
 // Google Maps specific types
 interface GoogleMapMouseEvent {
@@ -123,11 +124,10 @@ export default function EditRestaurantPage() {
     const fetchRestaurantData = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`http://192.168.1.115:8000/api/restaurants/${restaurantId}/`, {
-         
+        const response = await fetch(getApiUrl(`restaurants/${restaurantId}/`), {
           headers: {
-            'Authorization': `Bearer ${tokens?.access}`
-          }
+            Authorization: `Bearer ${tokens?.access}`,
+          },
         });
         
         if (!response.ok) {
@@ -282,12 +282,14 @@ export default function EditRestaurantPage() {
     e.preventDefault();
     
     // Validate location data
-    if (step === 4 && !formData.location) {
-      alert("Please go back and set your restaurant's location before submitting.");
+    if (!formData.location) {
+      setMapError("Please select a location on the map");
       return;
     }
     
     try {
+      // setIsSubmitting(true);
+      
       // Only update fields that can be logically edited
       const updateData = {
         name: formData.name,
@@ -306,7 +308,7 @@ export default function EditRestaurantPage() {
         days_open: formData.days_open
       };
       
-      const response = await fetch(`http://192.168.1.115:8000/api/restaurants/update/`, {
+      const response = await fetch(getApiUrl(`restaurants/update/`), {
         method: 'PUT',
         body: JSON.stringify({
           ...updateData,

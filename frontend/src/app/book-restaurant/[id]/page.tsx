@@ -7,6 +7,7 @@ import { CalendarIcon, Clock, Users } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { useAuth } from '@/context/AuthContext';
 import React from 'react';
+import { getApiUrl } from "@/lib/config";
 
 interface Restaurant {
   restaurant_id: number;
@@ -23,10 +24,10 @@ interface Restaurant {
   contact_info: string;
 }
 
-export default function BookRestaurantPage({ params }: { params: { id: string } }) {
-  // Unwrap params using React.use()
-  const unwrappedParams = React.use(params);
-  const restaurantId = unwrappedParams.id;
+export default function BookRestaurantPage() {
+  // Properly unwrap params using React.use() for future compatibility
+  
+  
   
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -34,6 +35,7 @@ export default function BookRestaurantPage({ params }: { params: { id: string } 
   const time = searchParams.get('time') || '';
   const people = searchParams.get('people') || '2';
   const slot_id = searchParams.get('slot_id') || '';
+  const restaurantId = searchParams.get('restaurant_id') || '';
   
   const [phoneNumber, setPhoneNumber] = useState('');
   const [specialRequest, setSpecialRequest] = useState('');
@@ -60,7 +62,7 @@ export default function BookRestaurantPage({ params }: { params: { id: string } 
     const fetchRestaurantData = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`http://192.168.1.115:8000/api/restaurants/${restaurantId}`);
+        const response = await fetch(getApiUrl(`restaurants/${restaurantId}`));
         
         if (!response.ok) {
           throw new Error('Failed to fetch restaurant data');
@@ -97,7 +99,7 @@ export default function BookRestaurantPage({ params }: { params: { id: string } 
         phone_number: phoneNumber
       };
       
-      const response = await fetch('http://192.168.1.115:8000/api/bookings/create-booking/', {
+      const response = await fetch(getApiUrl('bookings/create-booking/'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -10,6 +10,7 @@ import Image from "next/image";
 import Script from "next/script";
 import { ProtectedRoute } from "../components/ProtectedRoute";
 import { useAuth } from "@/context/AuthContext";
+import { getApiUrl } from "@/lib/config";
 // Add Google Maps types
 interface GoogleMapMouseEvent {
   latLng: {
@@ -28,7 +29,7 @@ interface RestaurantForm {
   // Basic Info
   name: string;
   cuisine_type: string;
-  cost_per_person: string;
+  cost_rating: string;
   description: string;
   
   // Contact & Address
@@ -91,7 +92,7 @@ export default function AddNewRestaurantPage() {
   const [formData, setFormData] = useState<RestaurantForm>({
     name: "",
     cuisine_type: "",
-    cost_per_person: "",
+    cost_rating: "",
     description: "",
     address: "",
     city: "",
@@ -182,6 +183,14 @@ export default function AddNewRestaurantPage() {
         photos: [...prev.photos, ...filesArray]
       }));
     }
+  };
+  
+  // Handle photo deletion
+  const handleDeletePhoto = (index: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      photos: prev.photos.filter((_, i) => i !== index)
+    }));
   };
   
   // Handle Google Maps location selection
@@ -296,7 +305,7 @@ export default function AddNewRestaurantPage() {
     }
     formDataToSend.append('name', formData.name);
     formDataToSend.append('cuisine_type', formData.cuisine_type);
-    formDataToSend.append('cost_per_person', formData.cost_per_person);
+    formDataToSend.append('cost_rating', formData.cost_rating);
     formDataToSend.append('description', formData.description);
     formDataToSend.append('address', formData.address);
     formDataToSend.append('city', formData.city);
@@ -327,7 +336,7 @@ export default function AddNewRestaurantPage() {
     });
     
     try {
-      const response = await fetch('http://192.168.1.115:8000/api/restaurants/create/', {
+      const response = await fetch(getApiUrl('restaurants/create/'), {
         method: 'POST',
         body: formDataToSend,
         headers: {
@@ -451,12 +460,12 @@ export default function AddNewRestaurantPage() {
                         </div>
                         
                         <div className="grid gap-3">
-                        <Label htmlFor="cost_per_person">Average Cost Per Person*</Label>
+                        <Label htmlFor="cost_rating">Cost Rating*</Label>
                         <Input
-                            id="cost_per_person"
-                            name="cost_per_person"
+                            id="cost_rating"
+                            name="cost_rating"
                             placeholder="$30"
-                            value={formData.cost_per_person}
+                            value={formData.cost_rating}
                             onChange={handleInputChange}
                             required
                         />
@@ -686,12 +695,13 @@ export default function AddNewRestaurantPage() {
                         <div className="grid gap-3">
                         <Label htmlFor="photos">Restaurant Photos*</Label>
                         <p className="text-sm text-muted-foreground">Upload high-quality photos of your restaurant, food, and ambiance</p>
+                        <p className="text-xs text-amber-600 font-medium">Note: Only PNG, JPEG, and JPG file formats are accepted.</p>
                         <Input
                             id="photos"
                             name="photos"
                             type="file"
                             multiple
-                            accept="image/*"
+                            accept="image/png, image/jpeg, image/jpg"
                             onChange={handlePhotoUpload}
                             className="py-2"
                         />
@@ -701,13 +711,23 @@ export default function AddNewRestaurantPage() {
                             <p>Selected photos: {formData.photos.length}</p>
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2">
                                 {Array.from(formData.photos).map((photo, index) => (
-                                <div key={index} className="relative h-24 rounded-md overflow-hidden">
+                                <div key={index} className="relative h-24 rounded-md overflow-hidden group">
                                     <Image
                                     src={URL.createObjectURL(photo)}
                                     alt={`Restaurant photo ${index + 1}`}
                                     fill
                                     className="object-cover"
                                     />
+                                    <button
+                                    type="button"
+                                    onClick={() => handleDeletePhoto(index)}
+                                    className="absolute top-1 right-1 bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                                    aria-label="Delete photo"
+                                    >
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M18 6L6 18M6 6l12 12"></path>
+                                    </svg>
+                                    </button>
                                 </div>
                                 ))}
                             </div>

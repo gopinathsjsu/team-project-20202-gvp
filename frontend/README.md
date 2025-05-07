@@ -14,11 +14,22 @@ pnpm dev
 bun dev
 ```
 
-Open [http://192.168.1.115:3000](http://192.168.1.115:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+
+## Environment Configuration
+
+The application uses environment variables for configuration:
+
+```bash
+# Create a .env.local file with your backend API URL
+NEXT_PUBLIC_API_URL=http://localhost:8000
+```
+
+For production, update the `NEXT_PUBLIC_API_URL` to your production API URL.
 
 ## Learn More
 

@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
+import { getApiUrl } from "@/lib/config";
 
 // Define interfaces for dashboard data
 interface TopRestaurant {
@@ -43,7 +44,8 @@ const AdminDashboard = () => {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const response = await fetch("http://192.168.1.115:8000/api/restaurants/admin/dashboard/", {
+        setLoading(true);
+        const response = await fetch(getApiUrl("restaurants/admin/dashboard/"), {
           headers: {
             Authorization: `Bearer ${tokens?.access}`,
           },
@@ -63,10 +65,10 @@ const AdminDashboard = () => {
       }
     };
 
-    if (isAuthenticated && tokens?.access) {
+    // if (isAuthenticated && tokens && user?.role === 'admin') {
       fetchDashboardData();
-    }
-  }, [isAuthenticated, tokens?.access]);
+    // }
+  }, [isAuthenticated, tokens, user]);
 
   if (loading) {
     return <div className="p-8 text-center">Loading dashboard data...</div>;
@@ -77,38 +79,38 @@ const AdminDashboard = () => {
   }
 
   return (
-    <div className="p-6 bg-gray-50">
+    <div className="p-6 bg-black text-white">
       <h2 className="text-2xl font-bold mb-6">Admin Dashboard</h2>
       
       {/* Stats Overview */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-white p-6 rounded-lg shadow">
+        <div className="bg-gray-900 p-6 rounded-lg shadow">
           <h3 className="text-lg font-semibold mb-2">Total Bookings</h3>
           <p className="text-3xl font-bold">{dashboardData.total_bookings}</p>
         </div>
-        <div className="bg-white p-6 rounded-lg shadow">
+        <div className="bg-gray-900 p-6 rounded-lg shadow">
           <h3 className="text-lg font-semibold mb-2">New Restaurants</h3>
           <p className="text-3xl font-bold">{dashboardData.new_restaurants}</p>
         </div>
-        <div className="bg-white p-6 rounded-lg shadow">
+        <div className="bg-gray-900 p-6 rounded-lg shadow">
           <h3 className="text-lg font-semibold mb-2">Pending Approvals</h3>
           <p className="text-3xl font-bold">{dashboardData.pending_restaurants}</p>
         </div>
       </div>
       
       {/* Top Restaurants */}
-      <div className="bg-white p-6 rounded-lg shadow mb-8">
+      <div className="bg-gray-900 p-6 rounded-lg shadow mb-8">
         <h3 className="text-lg font-semibold mb-4">Top Performing Restaurants</h3>
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+          <table className="min-w-full divide-y divide-gray-700">
+            <thead className="bg-gray-800">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bookings</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Avg. Rating</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Name</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Bookings</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Avg. Rating</th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-gray-900 divide-y divide-gray-700">
               {dashboardData.top_restaurants.map((restaurant, index) => (
                 <tr key={index}>
                   <td className="px-6 py-4 whitespace-nowrap">{restaurant.name}</td>
@@ -118,7 +120,7 @@ const AdminDashboard = () => {
               ))}
               {dashboardData.top_restaurants.length === 0 && (
                 <tr>
-                  <td colSpan={3} className="px-6 py-4 text-center text-gray-500">No data available</td>
+                  <td colSpan={3} className="px-6 py-4 text-center text-gray-400">No data available</td>
                 </tr>
               )}
             </tbody>
@@ -127,17 +129,17 @@ const AdminDashboard = () => {
       </div>
       
       {/* Bookings by Status */}
-      <div className="bg-white p-6 rounded-lg shadow">
+      <div className="bg-gray-900 p-6 rounded-lg shadow">
         <h3 className="text-lg font-semibold mb-4">Bookings by Status</h3>
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+          <table className="min-w-full divide-y divide-gray-700">
+            <thead className="bg-gray-800">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Count</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Status</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Count</th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-gray-900 divide-y divide-gray-700">
               {dashboardData.bookings_by_status.map((status, index) => (
                 <tr key={index}>
                   <td className="px-6 py-4 whitespace-nowrap">{status.status}</td>
@@ -146,7 +148,7 @@ const AdminDashboard = () => {
               ))}
               {dashboardData.bookings_by_status.length === 0 && (
                 <tr>
-                  <td colSpan={2} className="px-6 py-4 text-center text-gray-500">No data available</td>
+                  <td colSpan={2} className="px-6 py-4 text-center text-gray-400">No data available</td>
                 </tr>
               )}
             </tbody>
@@ -177,20 +179,20 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow">
+    <div className="min-h-screen bg-black text-white">
+      <header className="bg-gray-900 shadow">
         <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-gray-900">Admin Portal</h1>
+          <h1 className="text-2xl font-bold text-white">Admin Portal</h1>
           <div className="space-x-4">
             <Link 
               href="/admin/approve-restaurants" 
-              className="inline-block bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded"
+              className="inline-block bg-green-700 hover:bg-green-800 text-white font-medium py-2 px-4 rounded"
             >
               Approve Restaurants
             </Link>
             <Link 
               href="/admin/manage-restaurants" 
-              className="inline-block bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded"
+              className="inline-block bg-red-700 hover:bg-red-800 text-white font-medium py-2 px-4 rounded"
             >
               Delete Restaurants
             </Link>
