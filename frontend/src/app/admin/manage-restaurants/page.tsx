@@ -103,7 +103,7 @@ export default function ManageRestaurantsPage() {
   const [successMessage, setSuccessMessage] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredRestaurants, setFilteredRestaurants] = useState<Restaurant[]>([]);
-  const [removing, setRemoving] = useState<Record<number, boolean>>({});
+  const [, setRemoving] = useState<Record<number, boolean>>({});
 
   // Fetch approved restaurants
   useEffect(() => {

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
@@ -73,13 +73,7 @@ export default function MyBookingsPage() {
   const [bookingToCancel, setBookingToCancel] = useState<number | null>(null);
   const [cancellingBooking, setCancellingBooking] = useState(false);
 
-  useEffect(() => {
-    if (!authLoading && isAuthenticated && tokens) {
-      fetchBookings();
-    }
-  }, [authLoading, isAuthenticated, tokens]);
-
-  const fetchBookings = async () => {
+  const fetchBookings = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch(getApiUrl("bookings/my-bookings/"), {
@@ -137,7 +131,13 @@ export default function MyBookingsPage() {
       setError("Failed to load bookings. Please try again later.");
       setLoading(false);
     }
-  };
+  }, [tokens]);
+
+  useEffect(() => {
+    if (!authLoading && isAuthenticated && tokens) {
+      fetchBookings();
+    }
+  }, [authLoading, isAuthenticated, tokens, fetchBookings]);
 
   const openCancelDialog = (bookingId: number) => {
     setBookingToCancel(bookingId);
