@@ -24,10 +24,10 @@ interface Restaurant {
   contact_info: string;
 }
 
-export default function BookRestaurantPage({ params }: { params: { id: string } }) {
-  // Unwrap params using React.use()
-  const unwrappedParams = React.use(params);
-  const restaurantId = unwrappedParams.id;
+export default function BookRestaurantPage() {
+  // Properly unwrap params using React.use() for future compatibility
+  
+  
   
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -35,6 +35,7 @@ export default function BookRestaurantPage({ params }: { params: { id: string } 
   const time = searchParams.get('time') || '';
   const people = searchParams.get('people') || '2';
   const slot_id = searchParams.get('slot_id') || '';
+  const restaurantId = searchParams.get('restaurant_id') || '';
   
   const [phoneNumber, setPhoneNumber] = useState('');
   const [specialRequest, setSpecialRequest] = useState('');

@@ -275,7 +275,7 @@ export default function RestaurantDetailPage() {
       console.error("Google Maps error:", error);
       setMapError("Failed to initialize Google Maps: " + (error instanceof Error ? error.message : String(error)));
     }
-  }, [restaurant?.location, mapsLoaded]);
+  }, [restaurant?.location, mapsLoaded, restaurant]);
 
   // Fetch time slots
   useEffect(() => {
@@ -326,7 +326,7 @@ export default function RestaurantDetailPage() {
   const handleReservation = () => {
     // Redirect to booking page with necessary parameters
     router.push(
-      `/book-restaurant/${params.restaurant_id}?date=${format(selectedDate, "yyyy-MM-dd")}&time=${selectedTimeSlot}&people=${partySize}&slot_id=${selectedSlotID}`
+      `/book-restaurant/${params.restaurant_id}?date=${format(selectedDate, "yyyy-MM-dd")}&time=${selectedTimeSlot}&people=${partySize}&slot_id=${selectedSlotID}&restaurant_id=${params.restaurant_id}`
     );
   };
 

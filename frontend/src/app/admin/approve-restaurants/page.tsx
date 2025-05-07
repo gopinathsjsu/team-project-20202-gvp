@@ -80,8 +80,8 @@ export default function ApproveRestaurantsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
-  const [approving, setApproving] = useState<Record<number, boolean>>({});
-  const [removing, setRemoving] = useState<Record<number, boolean>>({});
+  const [, setApproving] = useState<Record<number, boolean>>({});
+  const [, setRemoving] = useState<Record<number, boolean>>({});
 
   // Fetch unapproved restaurants
   useEffect(() => {
