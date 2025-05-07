@@ -15,7 +15,6 @@ def send_booking_confirmation_email(user_email, user_name, booking_details):
         msg['From'] = settings.EMAIL_HOST_USER
         msg['To'] = user_email
 
-        # Create the body of the message
         context = {
             'user_name': user_name,
             'restaurant_name': booking_details['restaurant_name'],

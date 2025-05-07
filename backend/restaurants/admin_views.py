@@ -92,9 +92,9 @@ class AnalyticsDashboardView(APIView):
         
         # Get top restaurants by booking count
         top_restaurants = Restaurant.objects.filter(
-            booking__slot_id__in=bookings.values('slot_id')
+            bookingslot__slot_id__in=bookings.values('slot_id')
         ).annotate(
-            booking_count=Count('booking__booking_id')
+            booking_count=Count('bookingslot__booking__booking_id')
         ).order_by('-booking_count')[:5]
         
         # Format top restaurants data
