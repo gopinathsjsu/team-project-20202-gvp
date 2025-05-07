@@ -135,7 +135,7 @@ export default function AddNewRestaurantPage() {
   const daysOfWeek = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
   
   // Common table sizes
-  const commonTableSizes = ["2", "4", "6", "8", "10+"];
+  const commonTableSizes = ["2", "4", "6", "8", "10"];
   
   // Handle input changes
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
