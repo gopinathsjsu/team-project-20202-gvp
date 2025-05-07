@@ -17,10 +17,6 @@ def upload_to_s3(image_file, folder_name):
         aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
         region_name=settings.AWS_S3_REGION_NAME
     )
-    print(settings.AWS_ACCESS_KEY_ID)
-    print(settings.AWS_SECRET_ACCESS_KEY)
-    print(settings.AWS_STORAGE_BUCKET_NAME)
-    print(settings.AWS_S3_REGION_NAME)
     # Generate a unique filename
     file_extension = os.path.splitext(image_file.name)[1]
     unique_id = str(uuid.uuid4())
