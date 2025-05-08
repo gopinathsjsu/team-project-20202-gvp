@@ -126,7 +126,7 @@ export default function ViewRestaurantPage() {
                 </div>
                 <div>
                   <h3 className="font-semibold">Cost Rating</h3>
-                  <p className="text-gray-600">{"$".repeat(restaurant.cost_rating)}</p>
+                  <p className="text-gray-600">{`$${restaurant.cost_rating}`}</p>
                 </div>
               </div>
             </CardContent>
