@@ -527,3 +527,109 @@ INFO 2025-05-08 08:58:07,533 basehttp 68754 6216478720 "GET /api/restaurants/62/
 INFO 2025-05-08 08:58:07,747 views 68754 6149173248 Fetching time slots for restaurant 62
 INFO 2025-05-08 08:58:10,869 views 68754 6149173248 Found 0 available time slots for restaurant 62
 INFO 2025-05-08 08:58:10,870 basehttp 68754 6149173248 "GET /api/restaurants/62/time-slots/?date=2025-05-08&time=12:00&people=2 HTTP/1.1" 200 64
+INFO 2025-05-08 09:04:08,730 autoreload 70633 8483818624 Watching for file changes with StatReloader
+INFO 2025-05-08 09:04:41,772 basehttp 70633 6207778816 "POST /api/token/refresh/ HTTP/1.1" 200 241
+INFO 2025-05-08 09:04:44,042 basehttp 70633 6190952448 "GET /api/restaurants/hot/?page=1&pageSize=12 HTTP/1.1" 200 2960
+INFO 2025-05-08 16:00:18,877 autoreload 72597 8483818624 Watching for file changes with StatReloader
+INFO 2025-05-08 16:00:46,453 basehttp 72597 6135836672 "OPTIONS /api/restaurants/hot/?page=1&pageSize=12 HTTP/1.1" 200 0
+INFO 2025-05-08 16:00:46,453 basehttp 72597 6152663040 "OPTIONS /api/token/refresh/ HTTP/1.1" 200 0
+WARNING 2025-05-08 16:00:46,469 basehttp 72597 6152663040 "POST /api/token/refresh/ HTTP/1.1" 401 54
+INFO 2025-05-08 16:00:48,771 basehttp 72597 6135836672 "GET /api/restaurants/hot/?page=1&pageSize=12 HTTP/1.1" 200 2960
+INFO 2025-05-08 16:00:55,593 basehttp 72597 6135836672 "OPTIONS /api/users/login/ HTTP/1.1" 200 0
+INFO 2025-05-08 16:00:55,596 views 72597 6135836672 Login attempt for username: man1
+INFO 2025-05-08 16:00:55,912 views 72597 6135836672 User logged in successfully: man1
+INFO 2025-05-08 16:00:55,913 basehttp 72597 6135836672 "POST /api/users/login/ HTTP/1.1" 200 606
+INFO 2025-05-08 16:01:02,250 basehttp 72597 6135836672 "OPTIONS /api/restaurants/my-restaurants/ HTTP/1.1" 200 0
+INFO 2025-05-08 16:01:02,251 basehttp 72597 6152663040 "OPTIONS /api/restaurants/my-restaurants/ HTTP/1.1" 200 0
+INFO 2025-05-08 16:01:02,492 basehttp 72597 6135836672 "GET /api/restaurants/my-restaurants/ HTTP/1.1" 200 14358
+INFO 2025-05-08 16:01:02,729 basehttp 72597 6152663040 "GET /api/restaurants/my-restaurants/ HTTP/1.1" 200 14358
+INFO 2025-05-08 16:01:09,918 basehttp 72597 6152663040 "OPTIONS /api/restaurants/73/ HTTP/1.1" 200 0
+INFO 2025-05-08 16:01:09,918 basehttp 72597 6135836672 "OPTIONS /api/restaurants/73/ HTTP/1.1" 200 0
+INFO 2025-05-08 16:01:10,217 basehttp 72597 6152663040 "GET /api/restaurants/73/ HTTP/1.1" 200 566
+INFO 2025-05-08 16:01:10,503 basehttp 72597 6135836672 "GET /api/restaurants/73/ HTTP/1.1" 200 566
+INFO 2025-05-08 16:01:25,534 basehttp 72597 6135836672 "GET /api/restaurants/my-restaurants/ HTTP/1.1" 200 14358
+INFO 2025-05-08 16:01:25,763 basehttp 72597 6152663040 "GET /api/restaurants/my-restaurants/ HTTP/1.1" 200 14358
+INFO 2025-05-08 16:01:38,124 basehttp 72597 6152663040 "GET /api/restaurants/73/ HTTP/1.1" 200 566
+INFO 2025-05-08 16:01:40,141 basehttp 72597 6135836672 "GET /api/restaurants/73/ HTTP/1.1" 200 566
+INFO 2025-05-08 16:02:51,818 basehttp 72597 6135836672 "GET /api/restaurants/73/ HTTP/1.1" 200 566
+INFO 2025-05-08 16:03:10,770 basehttp 72597 6152663040 "GET /api/restaurants/73/ HTTP/1.1" 200 566
+INFO 2025-05-08 16:03:40,258 basehttp 72597 6152663040 "GET /api/restaurants/73/ HTTP/1.1" 200 566
+INFO 2025-05-08 16:03:45,150 basehttp 72597 6152663040 "GET /api/restaurants/73/ HTTP/1.1" 200 566
+INFO 2025-05-08 16:08:02,758 autoreload 72597 8483818624 /Users/vedantmehta/SJSU/Academics/Spring 25/CMPE 202 Software Systems Engineering/team-project-20202-gvp/backend/restaurants/views.py changed, reloading.
+INFO 2025-05-08 16:08:03,033 autoreload 72988 8483818624 Watching for file changes with StatReloader
+INFO 2025-05-08 16:08:24,353 basehttp 72988 6196850688 "GET /api/restaurants/73/ HTTP/1.1" 200 665
+INFO 2025-05-08 16:08:47,628 autoreload 72988 8483818624 /Users/vedantmehta/SJSU/Academics/Spring 25/CMPE 202 Software Systems Engineering/team-project-20202-gvp/backend/restaurants/views.py changed, reloading.
+INFO 2025-05-08 16:08:47,895 autoreload 73030 8483818624 Watching for file changes with StatReloader
+INFO 2025-05-08 16:09:54,755 basehttp 73030 6183579648 "POST /api/token/refresh/ HTTP/1.1" 200 241
+INFO 2025-05-08 16:09:56,830 basehttp 73030 6166753280 "GET /api/restaurants/hot/?page=1&pageSize=12 HTTP/1.1" 200 2960
+INFO 2025-05-08 16:09:58,400 basehttp 73030 6166753280 "GET /api/restaurants/my-restaurants/ HTTP/1.1" 200 14358
+INFO 2025-05-08 16:09:58,627 basehttp 73030 6183579648 "GET /api/restaurants/my-restaurants/ HTTP/1.1" 200 14358
+INFO 2025-05-08 16:10:01,885 basehttp 73030 6183579648 "GET /api/restaurants/73/ HTTP/1.1" 200 665
+INFO 2025-05-08 16:10:02,215 basehttp 73030 6166753280 "GET /api/restaurants/73/ HTTP/1.1" 200 665
+INFO 2025-05-08 16:10:03,879 basehttp 73030 6166753280 "GET /api/restaurants/my-restaurants/ HTTP/1.1" 200 14358
+INFO 2025-05-08 16:10:04,100 basehttp 73030 6183579648 "GET /api/restaurants/my-restaurants/ HTTP/1.1" 200 14358
+INFO 2025-05-08 16:10:10,524 basehttp 73030 6183579648 "GET /api/restaurants/73/ HTTP/1.1" 200 665
+INFO 2025-05-08 16:10:12,535 basehttp 73030 6166753280 "GET /api/restaurants/73/ HTTP/1.1" 200 665
+INFO 2025-05-08 16:11:09,945 basehttp 73030 6166753280 "OPTIONS /api/restaurants/update/ HTTP/1.1" 200 0
+INFO 2025-05-08 16:11:10,274 views 73030 6166753280 Updating restaurant 73 for manager: man1
+INFO 2025-05-08 16:11:13,256 basehttp 73030 6166753280 "PUT /api/restaurants/update/ HTTP/1.1" 200 6993
+INFO 2025-05-08 16:11:24,828 basehttp 73030 6166753280 "GET /api/restaurants/my-restaurants/ HTTP/1.1" 200 14358
+INFO 2025-05-08 16:11:25,049 basehttp 73030 6183579648 "GET /api/restaurants/my-restaurants/ HTTP/1.1" 200 14358
+INFO 2025-05-08 16:11:32,843 basehttp 73030 6183579648 "GET /api/restaurants/73/ HTTP/1.1" 200 568
+INFO 2025-05-08 16:11:33,176 basehttp 73030 6166753280 "GET /api/restaurants/73/ HTTP/1.1" 200 568
+INFO 2025-05-08 16:11:38,585 basehttp 73030 6166753280 "GET /api/restaurants/my-restaurants/ HTTP/1.1" 200 14358
+INFO 2025-05-08 16:11:38,808 basehttp 73030 6183579648 "GET /api/restaurants/my-restaurants/ HTTP/1.1" 200 14358
+INFO 2025-05-08 16:11:46,567 basehttp 73030 6183579648 "GET /api/restaurants/73/ HTTP/1.1" 200 568
+INFO 2025-05-08 16:11:48,576 basehttp 73030 6166753280 "GET /api/restaurants/73/ HTTP/1.1" 200 568
+INFO 2025-05-08 16:15:26,748 autoreload 73030 8483818624 /Users/vedantmehta/SJSU/Academics/Spring 25/CMPE 202 Software Systems Engineering/team-project-20202-gvp/backend/restaurants/views.py changed, reloading.
+INFO 2025-05-08 16:15:27,115 autoreload 73431 8483818624 Watching for file changes with StatReloader
+INFO 2025-05-08 16:15:37,370 autoreload 73431 8483818624 /Users/vedantmehta/SJSU/Academics/Spring 25/CMPE 202 Software Systems Engineering/team-project-20202-gvp/backend/restaurants/views.py changed, reloading.
+INFO 2025-05-08 16:15:37,668 autoreload 73452 8483818624 Watching for file changes with StatReloader
+INFO 2025-05-08 16:15:44,896 autoreload 73452 8483818624 /Users/vedantmehta/SJSU/Academics/Spring 25/CMPE 202 Software Systems Engineering/team-project-20202-gvp/backend/restaurants/views.py changed, reloading.
+INFO 2025-05-08 16:15:45,175 autoreload 73471 8483818624 Watching for file changes with StatReloader
+INFO 2025-05-08 16:15:46,339 autoreload 73471 8483818624 /Users/vedantmehta/SJSU/Academics/Spring 25/CMPE 202 Software Systems Engineering/team-project-20202-gvp/backend/restaurants/views.py changed, reloading.
+INFO 2025-05-08 16:15:46,522 autoreload 73474 8483818624 Watching for file changes with StatReloader
+INFO 2025-05-08 16:15:55,780 autoreload 73474 8483818624 /Users/vedantmehta/SJSU/Academics/Spring 25/CMPE 202 Software Systems Engineering/team-project-20202-gvp/backend/restaurants/views.py changed, reloading.
+INFO 2025-05-08 16:15:55,999 autoreload 73490 8483818624 Watching for file changes with StatReloader
+INFO 2025-05-08 16:16:05,212 autoreload 73490 8483818624 /Users/vedantmehta/SJSU/Academics/Spring 25/CMPE 202 Software Systems Engineering/team-project-20202-gvp/backend/restaurants/views.py changed, reloading.
+INFO 2025-05-08 16:16:05,397 autoreload 73500 8483818624 Watching for file changes with StatReloader
+INFO 2025-05-08 16:16:31,796 autoreload 73500 8483818624 /Users/vedantmehta/SJSU/Academics/Spring 25/CMPE 202 Software Systems Engineering/team-project-20202-gvp/backend/restaurants/views.py changed, reloading.
+INFO 2025-05-08 16:16:32,057 autoreload 73508 8483818624 Watching for file changes with StatReloader
+INFO 2025-05-08 16:17:11,111 basehttp 73508 6187937792 "POST /api/token/refresh/ HTTP/1.1" 200 241
+INFO 2025-05-08 16:17:13,393 basehttp 73508 6187937792 "GET /api/restaurants/my-restaurants/ HTTP/1.1" 200 14358
+INFO 2025-05-08 16:17:13,596 basehttp 73508 6171111424 "GET /api/restaurants/hot/?page=1&pageSize=12 HTTP/1.1" 200 2960
+INFO 2025-05-08 16:17:13,645 basehttp 73508 6204764160 "GET /api/restaurants/my-restaurants/ HTTP/1.1" 200 14358
+ERROR 2025-05-08 16:17:32,526 basehttp 73508 6204764160 "GET /api/restaurants/73/ HTTP/1.1" 500 99852
+ERROR 2025-05-08 16:17:34,523 basehttp 73508 6171111424 "GET /api/restaurants/73/ HTTP/1.1" 500 99852
+INFO 2025-05-08 16:18:21,455 autoreload 73508 8483818624 /Users/vedantmehta/SJSU/Academics/Spring 25/CMPE 202 Software Systems Engineering/team-project-20202-gvp/backend/restaurants/views.py changed, reloading.
+INFO 2025-05-08 16:18:21,775 autoreload 73640 8483818624 Watching for file changes with StatReloader
+WARNING 2025-05-08 16:18:46,310 basehttp 73640 6136672256 "GET /api/restaurants/73/ HTTP/1.1" 401 172
+INFO 2025-05-08 16:18:46,519 basehttp 73640 6153498624 "POST /api/token/refresh/ HTTP/1.1" 200 241
+INFO 2025-05-08 16:18:46,864 basehttp 73640 6153498624 "GET /api/restaurants/73/ HTTP/1.1" 200 568
+INFO 2025-05-08 16:18:48,609 basehttp 73640 6170324992 "GET /api/restaurants/hot/?page=1&pageSize=12 HTTP/1.1" 200 2960
+INFO 2025-05-08 16:18:49,001 basehttp 73640 6170324992 "GET /api/restaurants/my-restaurants/ HTTP/1.1" 200 14358
+INFO 2025-05-08 16:18:49,217 basehttp 73640 6136672256 "GET /api/restaurants/my-restaurants/ HTTP/1.1" 200 14358
+INFO 2025-05-08 16:18:51,859 basehttp 73640 6136672256 "OPTIONS /api/restaurants/42/ HTTP/1.1" 200 0
+INFO 2025-05-08 16:18:51,859 basehttp 73640 6170324992 "OPTIONS /api/restaurants/42/ HTTP/1.1" 200 0
+INFO 2025-05-08 16:18:52,199 basehttp 73640 6136672256 "GET /api/restaurants/42/ HTTP/1.1" 200 542
+INFO 2025-05-08 16:18:52,545 basehttp 73640 6170324992 "GET /api/restaurants/42/ HTTP/1.1" 200 542
+INFO 2025-05-08 16:18:53,602 basehttp 73640 6153498624 "GET /api/restaurants/my-restaurants/ HTTP/1.1" 200 14358
+INFO 2025-05-08 16:18:53,818 basehttp 73640 6170324992 "GET /api/restaurants/my-restaurants/ HTTP/1.1" 200 14358
+INFO 2025-05-08 16:20:00,671 basehttp 73640 6153498624 "POST /api/token/refresh/ HTTP/1.1" 200 241
+INFO 2025-05-08 16:20:02,795 basehttp 73640 6153498624 "GET /api/restaurants/my-restaurants/ HTTP/1.1" 200 14358
+INFO 2025-05-08 16:20:02,942 basehttp 73640 6136672256 "GET /api/restaurants/hot/?page=1&pageSize=12 HTTP/1.1" 200 2960
+INFO 2025-05-08 16:22:06,529 autoreload 73640 8483818624 /Users/vedantmehta/SJSU/Academics/Spring 25/CMPE 202 Software Systems Engineering/team-project-20202-gvp/backend/restaurants/views.py changed, reloading.
+INFO 2025-05-08 16:22:06,816 autoreload 73872 8483818624 Watching for file changes with StatReloader
+INFO 2025-05-08 16:22:28,569 basehttp 73872 6123253760 "GET /api/restaurants/73/ HTTP/1.1" 200 584
+INFO 2025-05-08 16:22:30,562 basehttp 73872 6140080128 "GET /api/restaurants/73/ HTTP/1.1" 200 584
+INFO 2025-05-08 16:22:54,012 basehttp 73872 6123253760 "GET /api/restaurants/my-restaurants/ HTTP/1.1" 200 14358
+INFO 2025-05-08 16:22:54,234 basehttp 73872 6156906496 "GET /api/restaurants/my-restaurants/ HTTP/1.1" 200 14358
+INFO 2025-05-08 16:23:49,496 basehttp 73872 6123253760 "POST /api/token/refresh/ HTTP/1.1" 200 241
+INFO 2025-05-08 16:23:51,576 basehttp 73872 6156906496 "GET /api/restaurants/hot/?page=1&pageSize=12 HTTP/1.1" 200 2960
+INFO 2025-05-08 16:27:46,613 basehttp 73872 6156906496 "GET /api/restaurants/my-restaurants/ HTTP/1.1" 200 14358
+INFO 2025-05-08 16:28:33,580 basehttp 73872 6123253760 "POST /api/token/refresh/ HTTP/1.1" 200 241
+INFO 2025-05-08 16:28:35,711 basehttp 73872 6156906496 "GET /api/restaurants/hot/?page=1&pageSize=12 HTTP/1.1" 200 2960
+INFO 2025-05-08 16:28:43,192 basehttp 73872 6123253760 "POST /api/token/refresh/ HTTP/1.1" 200 241
+INFO 2025-05-08 16:28:45,302 basehttp 73872 6156906496 "GET /api/restaurants/hot/?page=1&pageSize=12 HTTP/1.1" 200 2960
+INFO 2025-05-08 16:28:46,223 basehttp 73872 6123253760 "POST /api/token/refresh/ HTTP/1.1" 200 241
+INFO 2025-05-08 16:28:48,435 basehttp 73872 6156906496 "GET /api/restaurants/hot/?page=1&pageSize=12 HTTP/1.1" 200 2960

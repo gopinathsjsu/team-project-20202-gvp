@@ -95,6 +95,42 @@ declare global {
   }
 }
 
+// Function to format time for HTML time input
+const formatTimeForInput = (timeStr: string): string => {
+  if (!timeStr) return '';
+  
+  // If it's already in HH:MM format, return it
+  if (/^\d{2}:\d{2}(:\d{2})?$/.test(timeStr)) {
+    // Remove seconds if present
+    return timeStr.substring(0, 5);
+  }
+  
+  // Try to parse time in various formats
+  try {
+    // Parse time like "2:30 PM" or "14:30"
+    const timeParts = timeStr.match(/(\d{1,2}):(\d{2})(?:\s*(AM|PM))?/i);
+    if (timeParts) {
+      let hours = parseInt(timeParts[1], 10);
+      const minutes = timeParts[2];
+      const period = timeParts[3]?.toUpperCase();
+      
+      // Convert to 24-hour format if needed
+      if (period === 'PM' && hours < 12) {
+        hours += 12;
+      } else if (period === 'AM' && hours === 12) {
+        hours = 0;
+      }
+      
+      // Format as HH:MM
+      return `${hours.toString().padStart(2, '0')}:${minutes}`;
+    }
+  } catch (error) {
+    console.error("Error parsing time:", error);
+  }
+  
+  return '';
+};
+
 export default function EditRestaurantPage() {
   const params = useParams();
   const router = useRouter();
@@ -146,6 +182,9 @@ export default function EditRestaurantPage() {
         
         const restaurantData = await response.json();
         
+        // Log the response for debugging
+        console.log("Restaurant data received:", restaurantData);
+        
         // Set form data with fetched restaurant data
         setFormData({
           name: restaurantData.name || "",
@@ -155,12 +194,21 @@ export default function EditRestaurantPage() {
           address: restaurantData.address || "",
           city: restaurantData.city || "",
           state: restaurantData.state || "",
-          zipcode: restaurantData.zipcode || "",
+          // Make sure to handle potential field name differences
+          zipcode: restaurantData.zip || "",
           contact_info: restaurantData.contact_info || "",
-          opening_time: restaurantData.opening_time || "",
-          closing_time: restaurantData.closing_time || "",
-          days_open: restaurantData.days_open || [],
-          table_sizes: restaurantData.table_sizes || [],
+          // Format time values properly for HTML time inputs
+          opening_time: formatTimeForInput(restaurantData.opening_time || ""),
+          closing_time: formatTimeForInput(restaurantData.closing_time || ""),
+          // Handle days_open which should now be available directly from the API
+          days_open: Array.isArray(restaurantData.days_open) 
+            ? restaurantData.days_open 
+            : [],
+          table_sizes: Array.isArray(restaurantData.table_sizes) 
+            ? restaurantData.table_sizes 
+            : typeof restaurantData.table_sizes === 'string'
+              ? restaurantData.table_sizes.split(',').map((size: string) => size.trim())
+              : [],
           location: restaurantData.latitude && restaurantData.longitude ? {
             lat: parseFloat(restaurantData.latitude),
             lng: parseFloat(restaurantData.longitude)
@@ -600,7 +648,7 @@ export default function EditRestaurantPage() {
                         </div>
                         
                         <div className="grid gap-3">
-                          <Label htmlFor="zipcode">zipcode Code*</Label>
+                          <Label htmlFor="zipcode">Zipcode*</Label>
                           <Input
                             id="zipcode"
                             name="zipcode"
@@ -653,29 +701,45 @@ export default function EditRestaurantPage() {
                       <div className="grid gap-3">
                         <Label>Days Open*</Label>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                          {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].map(day => (
-                            <div key={day} className="flex items-center space-x-2">
-                              <input
-                                type="checkbox"
-                                id={`day-${day}`}
-                                checked={formData.days_open.includes(day)}
-                                onChange={() => {
-                                  setFormData((prev) => {
-                                    const updatedDays = prev.days_open.includes(day)
-                                      ? prev.days_open.filter(d => d !== day)
-                                      : [...prev.days_open, day];
-                                    
-                                    return {
-                                      ...prev,
-                                      days_open: updatedDays
-                                    };
-                                  });
-                                }}
-                                className="h-4 w-4 rounded border-gray-300 text-red-900 focus:ring-red-900"
-                              />
-                              <label htmlFor={`day-${day}`}>{day}</label>
-                            </div>
-                          ))}
+                          {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].map(day => {
+                            // Normalize day names for more reliable comparison
+                            const dayLower = day.toLowerCase();
+                            const isDayIncluded = formData.days_open.some(d => 
+                              d.toLowerCase() === dayLower || 
+                              d.toLowerCase() === dayLower.substring(0, 3) ||  // Handle Mon, Tue, etc.
+                              dayLower.includes(d.toLowerCase())  // Handle other variations
+                            );
+                            
+                            return (
+                              <div key={day} className="flex items-center space-x-2">
+                                <input
+                                  type="checkbox"
+                                  id={`day-${day}`}
+                                  checked={isDayIncluded}
+                                  onChange={() => {
+                                    setFormData((prev) => {
+                                      // Remove all variations of this day name
+                                      const filteredDays = prev.days_open.filter(d => 
+                                        !d.toLowerCase().includes(dayLower.substring(0, 3)) && 
+                                        !dayLower.includes(d.toLowerCase())
+                                      );
+                                      
+                                      const updatedDays = isDayIncluded
+                                        ? filteredDays
+                                        : [...filteredDays, day]; // Always add with consistent format
+                                      
+                                      return {
+                                        ...prev,
+                                        days_open: updatedDays
+                                      };
+                                    });
+                                  }}
+                                  className="h-4 w-4 rounded border-gray-300 text-red-900 focus:ring-red-900"
+                                />
+                                <label htmlFor={`day-${day}`}>{day}</label>
+                              </div>
+                            );
+                          })}
                         </div>
                       </div>
                     </div>

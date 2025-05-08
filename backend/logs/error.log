@@ -1,0 +1,48 @@
+ERROR 2025-05-08 16:17:32,525 log 73508 6204764160 Internal Server Error: /api/restaurants/73/
+Traceback (most recent call last):
+  File "/Users/vedantmehta/SJSU/Academics/Spring 25/CMPE 202 Software Systems Engineering/team-project-20202-gvp/backend/venv/lib/python3.13/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+  File "/Users/vedantmehta/SJSU/Academics/Spring 25/CMPE 202 Software Systems Engineering/team-project-20202-gvp/backend/venv/lib/python3.13/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "/Users/vedantmehta/SJSU/Academics/Spring 25/CMPE 202 Software Systems Engineering/team-project-20202-gvp/backend/venv/lib/python3.13/site-packages/django/views/decorators/csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "/Users/vedantmehta/SJSU/Academics/Spring 25/CMPE 202 Software Systems Engineering/team-project-20202-gvp/backend/venv/lib/python3.13/site-packages/django/views/generic/base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/vedantmehta/SJSU/Academics/Spring 25/CMPE 202 Software Systems Engineering/team-project-20202-gvp/backend/venv/lib/python3.13/site-packages/rest_framework/views.py", line 509, in dispatch
+    response = self.handle_exception(exc)
+  File "/Users/vedantmehta/SJSU/Academics/Spring 25/CMPE 202 Software Systems Engineering/team-project-20202-gvp/backend/venv/lib/python3.13/site-packages/rest_framework/views.py", line 469, in handle_exception
+    self.raise_uncaught_exception(exc)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^
+  File "/Users/vedantmehta/SJSU/Academics/Spring 25/CMPE 202 Software Systems Engineering/team-project-20202-gvp/backend/venv/lib/python3.13/site-packages/rest_framework/views.py", line 480, in raise_uncaught_exception
+    raise exc
+  File "/Users/vedantmehta/SJSU/Academics/Spring 25/CMPE 202 Software Systems Engineering/team-project-20202-gvp/backend/venv/lib/python3.13/site-packages/rest_framework/views.py", line 506, in dispatch
+    response = handler(request, *args, **kwargs)
+  File "/Users/vedantmehta/SJSU/Academics/Spring 25/CMPE 202 Software Systems Engineering/team-project-20202-gvp/backend/restaurants/views.py", line 180, in get
+    if restaurant and restaurant.manager_id.id == request.user.id:
+                      ^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'User' object has no attribute 'id'
+ERROR 2025-05-08 16:17:34,522 log 73508 6171111424 Internal Server Error: /api/restaurants/73/
+Traceback (most recent call last):
+  File "/Users/vedantmehta/SJSU/Academics/Spring 25/CMPE 202 Software Systems Engineering/team-project-20202-gvp/backend/venv/lib/python3.13/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+  File "/Users/vedantmehta/SJSU/Academics/Spring 25/CMPE 202 Software Systems Engineering/team-project-20202-gvp/backend/venv/lib/python3.13/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "/Users/vedantmehta/SJSU/Academics/Spring 25/CMPE 202 Software Systems Engineering/team-project-20202-gvp/backend/venv/lib/python3.13/site-packages/django/views/decorators/csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "/Users/vedantmehta/SJSU/Academics/Spring 25/CMPE 202 Software Systems Engineering/team-project-20202-gvp/backend/venv/lib/python3.13/site-packages/django/views/generic/base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/vedantmehta/SJSU/Academics/Spring 25/CMPE 202 Software Systems Engineering/team-project-20202-gvp/backend/venv/lib/python3.13/site-packages/rest_framework/views.py", line 509, in dispatch
+    response = self.handle_exception(exc)
+  File "/Users/vedantmehta/SJSU/Academics/Spring 25/CMPE 202 Software Systems Engineering/team-project-20202-gvp/backend/venv/lib/python3.13/site-packages/rest_framework/views.py", line 469, in handle_exception
+    self.raise_uncaught_exception(exc)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^
+  File "/Users/vedantmehta/SJSU/Academics/Spring 25/CMPE 202 Software Systems Engineering/team-project-20202-gvp/backend/venv/lib/python3.13/site-packages/rest_framework/views.py", line 480, in raise_uncaught_exception
+    raise exc
+  File "/Users/vedantmehta/SJSU/Academics/Spring 25/CMPE 202 Software Systems Engineering/team-project-20202-gvp/backend/venv/lib/python3.13/site-packages/rest_framework/views.py", line 506, in dispatch
+    response = handler(request, *args, **kwargs)
+  File "/Users/vedantmehta/SJSU/Academics/Spring 25/CMPE 202 Software Systems Engineering/team-project-20202-gvp/backend/restaurants/views.py", line 180, in get
+    if restaurant and restaurant.manager_id.id == request.user.id:
+                      ^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'User' object has no attribute 'id'
