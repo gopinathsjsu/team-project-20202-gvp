@@ -81,7 +81,8 @@ class RestaurantFullSerializer(serializers.ModelSerializer):
     )
     table_sizes = serializers.ListField(child=serializers.IntegerField(), write_only=True, required=False)
     available_booking_times = serializers.ListField(child=serializers.TimeField(), write_only=True, required=False)
-    location = serializers.JSONField(write_only=True, required=False)
+    location_lat = serializers.FloatField(write_only=True, required=False)
+    location_lng = serializers.FloatField(write_only=True, required=False)
     zipcode = serializers.CharField(write_only=True, source='zip')
     manager_id = serializers.PrimaryKeyRelatedField(read_only=True)
     restaurant_photos = serializers.SerializerMethodField()
@@ -95,7 +96,7 @@ class RestaurantFullSerializer(serializers.ModelSerializer):
             'restaurant_id', 'manager_id', 'name', 'cuisine_type', 'cost_rating', 
             'description', 'address', 'contact_info', 'days_open', 'opening_time', 
             'closing_time', 'photos', 'table_sizes', 'available_booking_times', 
-            'location', 'city', 'state', 'zipcode', 'location_data', 'approved', 
+            'location_lat', 'location_lng', 'city', 'state', 'zipcode', 'location_data', 'approved', 
             'restaurant_photos', 'operating_hours', 'available_slots'
         ]
         read_only_fields = ['restaurant_id', 'manager_id', 'approved']
@@ -142,15 +143,16 @@ class RestaurantFullSerializer(serializers.ModelSerializer):
         opening_time = validated_data.pop('opening_time')
         closing_time = validated_data.pop('closing_time')
         photos = validated_data.pop('photos', [])
-        location = validated_data.pop('location', None)
+        location_lat = validated_data.pop('location_lat', None)
+        location_lng = validated_data.pop('location_lng', None)
         # Remove fields that don't exist in the model
         validated_data.pop('table_sizes', None)
         validated_data.pop('available_booking_times', None)
         
         # Set location data if provided
-        if location:
-            validated_data['latitude'] = location.get('lat')
-            validated_data['longitude'] = location.get('lng')
+        if location_lat is not None and location_lng is not None:
+            validated_data['latitude'] = location_lat
+            validated_data['longitude'] = location_lng
 
         # Create restaurant with manager_id from context
         restaurant = super().create(validated_data)
@@ -210,15 +212,17 @@ class RestaurantFullSerializer(serializers.ModelSerializer):
         opening_time = validated_data.pop('opening_time', None)
         closing_time = validated_data.pop('closing_time', None)
         photos = validated_data.pop('photos', None)
-        location = validated_data.pop('location', None)
+        location_lat = validated_data.pop('location_lat', None)
+        location_lng = validated_data.pop('location_lng', None)
         # Remove fields that don't exist in the model
         validated_data.pop('table_sizes', None)
         validated_data.pop('available_booking_times', None)
         
         # Update location data if provided
-        if location:
-            instance.latitude = location.get('lat', instance.latitude)
-            instance.longitude = location.get('lng', instance.longitude)
+        if location_lat is not None:
+            instance.latitude = location_lat
+        if location_lng is not None:
+            instance.longitude = location_lng
 
         # Update basic restaurant info
         for attr, value in validated_data.items():

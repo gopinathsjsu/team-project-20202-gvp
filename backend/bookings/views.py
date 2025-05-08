@@ -15,6 +15,10 @@ from datetime import datetime, timedelta
 import pytz
 from django.utils import timezone
 from .utils import send_booking_confirmation_email
+import logging
+
+# Get logger for bookings app
+logger = logging.getLogger('bookings')
 
 # BookingSlot Views
 class BookingSlotListCreateView(generics.ListCreateAPIView):
@@ -23,19 +27,23 @@ class BookingSlotListCreateView(generics.ListCreateAPIView):
     authentication_classes = [JWTAuthentication]
 
     def get_queryset(self):
+        logger.info(f"Listing booking slots for manager: {self.request.user.username}")
         # Only show slots for restaurants managed by the user
         return BookingSlot.objects.filter(restaurant_id__manager_id=self.request.user)
 
     def perform_create(self, serializer):
         restaurant_id = self.request.data.get('restaurant_id')
+        logger.info(f"Creating booking slot for restaurant {restaurant_id} by manager {self.request.user.username}")
         restaurant = get_object_or_404(Restaurant, restaurant_id=restaurant_id, manager_id=self.request.user)
         serializer.save(restaurant_id=restaurant)
+        logger.info(f"Booking slot created successfully for restaurant {restaurant_id}")
 
 class BookingSlotDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = BookingSlotSerializer
     permission_classes = [permissions.IsAuthenticated, IsRestaurantManager]
 
     def get_queryset(self):
+        logger.info(f"Retrieving booking slot details for manager: {self.request.user.username}")
         return BookingSlot.objects.filter(restaurant_id__manager_id=self.request.user)
 
 # View for creating recurring booking slots
@@ -46,9 +54,12 @@ class CreateRecurringBookingSlotsView(APIView):
         restaurant_id = request.data.get('restaurant_id')
         start_date = request.data.get('start_date')
         end_date = request.data.get('end_date')
-        table_sizes = request.data.get('table_sizes', [])  # List of table sizes to create slots for
+        table_sizes = request.data.get('table_sizes', [])
+        
+        logger.info(f"Creating recurring booking slots for restaurant {restaurant_id} from {start_date} to {end_date}")
         
         if not all([restaurant_id, start_date, end_date, table_sizes]):
+            logger.warning(f"Missing required parameters for creating recurring slots: restaurant_id={restaurant_id}, start_date={start_date}, end_date={end_date}")
             return Response({
                 'error': 'restaurant_id, start_date, end_date, and table_sizes are required'
             }, status=status.HTTP_400_BAD_REQUEST)
@@ -65,6 +76,7 @@ class CreateRecurringBookingSlotsView(APIView):
             restaurant_hours = RestaurantHours.objects.filter(restaurant_id=restaurant)
             
             if not restaurant_hours.exists():
+                logger.warning(f"No operating hours defined for restaurant {restaurant_id}")
                 return Response({
                     'error': 'No operating hours defined for this restaurant'
                 }, status=status.HTTP_400_BAD_REQUEST)
@@ -79,7 +91,6 @@ class CreateRecurringBookingSlotsView(APIView):
                 
                 if hours:
                     # Create slots for each hour of operation
-                    # Use the exact time from restaurant hours without timezone conversion
                     current_time = datetime.combine(current_date, hours.open_time)
                     close_time = datetime.combine(current_date, hours.close_time)
                     
@@ -110,6 +121,7 @@ class CreateRecurringBookingSlotsView(APIView):
                 # Move to next day
                 current_date += timedelta(days=1)
             
+            logger.info(f"Successfully created {len(created_slots)} booking slots for restaurant {restaurant_id}")
             # Serialize created slots
             serializer = BookingSlotSerializer(created_slots, many=True)
             
@@ -119,10 +131,12 @@ class CreateRecurringBookingSlotsView(APIView):
             }, status=status.HTTP_201_CREATED)
             
         except ValueError as e:
+            logger.error(f"Invalid date format while creating recurring slots: {str(e)}")
             return Response({
                 'error': f'Invalid date format: {str(e)}'
             }, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
+            logger.error(f"Error creating booking slots: {str(e)}")
             return Response({
                 'error': f'Error creating booking slots: {str(e)}'
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -132,11 +146,13 @@ class AvailableSlotsView(APIView):
     permission_classes = [permissions.IsAuthenticated]
     
     def get(self, request, restaurant_id):
+        logger.info(f"Fetching available slots for restaurant {restaurant_id}")
         # Get query parameters
         date_str = request.query_params.get('date')
         num_people = request.query_params.get('people')
         
         if not all([date_str, num_people]):
+            logger.warning(f"Missing required parameters for available slots: date={date_str}, people={num_people}")
             return Response({
                 'error': 'Date and number of people are required parameters'
             }, status=status.HTTP_400_BAD_REQUEST)
@@ -150,6 +166,7 @@ class AvailableSlotsView(APIView):
             try:
                 restaurant = Restaurant.objects.get(restaurant_id=restaurant_id, approved=True)
             except Restaurant.DoesNotExist:
+                logger.error(f"Restaurant not found: {restaurant_id}")
                 return Response({
                     'error': 'Restaurant not found'
                 }, status=status.HTTP_404_NOT_FOUND)
@@ -164,6 +181,7 @@ class AvailableSlotsView(APIView):
             ).first()
             
             if not hours:
+                logger.warning(f"Restaurant {restaurant_id} is closed on {day_of_week}")
                 return Response({
                     'error': 'Restaurant is closed on this day'
                 }, status=status.HTTP_400_BAD_REQUEST)
@@ -186,16 +204,19 @@ class AvailableSlotsView(APIView):
                 if booked_tables < slot.total_tables:
                     available_slots.append(slot)
             
+            logger.info(f"Found {len(available_slots)} available slots for restaurant {restaurant_id}")
             # Serialize available slots
             serializer = BookingSlotDetailSerializer(available_slots, many=True)
             
             return Response(serializer.data, status=status.HTTP_200_OK)
             
         except ValueError as e:
+            logger.error(f"Invalid parameter format while fetching available slots: {str(e)}")
             return Response({
                 'error': f'Invalid parameter format: {str(e)}'
             }, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
+            logger.error(f"Error retrieving available slots: {str(e)}")
             return Response({
                 'error': f'Error retrieving available slots: {str(e)}'
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -204,6 +225,7 @@ class CreateBookingView(APIView):
     permission_classes = [permissions.IsAuthenticated]
     
     def post(self, request):
+        logger.info(f"Creating booking for user: {request.user.username}")
         serializer = BookingCreateSerializer(data=request.data)
         
         if serializer.is_valid():
@@ -216,6 +238,7 @@ class CreateBookingView(APIView):
                 slot_id = int(slot_id) if not isinstance(slot_id, int) else slot_id
                 slot = BookingSlot.objects.get(slot_id=slot_id)
             except (BookingSlot.DoesNotExist, ValueError):
+                logger.error(f"Booking slot not found: {slot_id}")
                 return Response({
                     'error': 'Booking slot not found'
                 }, status=status.HTTP_404_NOT_FOUND)
@@ -227,12 +250,14 @@ class CreateBookingView(APIView):
             ).count()
             
             if booked_tables >= slot.total_tables:
+                logger.warning(f"Slot {slot_id} is fully booked")
                 return Response({
                     'error': 'This slot is fully booked'
                 }, status=status.HTTP_400_BAD_REQUEST)
             
             # Check if the number of people is appropriate for the table size
             if number_of_people > slot.table_size:
+                logger.warning(f"Table size mismatch: requested {number_of_people} people for table size {slot.table_size}")
                 return Response({
                     'error': f'This table can only accommodate up to {slot.table_size} people'
                 }, status=status.HTTP_400_BAD_REQUEST)
@@ -250,25 +275,18 @@ class CreateBookingView(APIView):
             restaurant.times_booked_today += 1
             restaurant.save()
             
+            logger.info(f"Booking created successfully: {booking.booking_id} for user {request.user.username}")
+            
             # Send confirmation email
-            booking_details = {
-                'restaurant_name': restaurant.name,
-                'booking_date': slot.slot_datetime.strftime('%Y-%m-%d'),
-                'booking_time': slot.slot_datetime.strftime('%I:%M %p'),
-                'number_of_people': number_of_people,
-                'booking_id': booking.booking_id
-            }
+            try:
+                send_booking_confirmation_email(booking)
+                logger.info(f"Confirmation email sent for booking {booking.booking_id}")
+            except Exception as e:
+                logger.error(f"Failed to send confirmation email for booking {booking.booking_id}: {str(e)}")
             
-            send_booking_confirmation_email(
-                user_email=request.user.email,
-                user_name=request.user.username,
-                booking_details=booking_details
-            )
-            
-            # Return the created booking
-            booking_serializer = BookingSerializer(booking)
-            return Response(booking_serializer.data, status=status.HTTP_201_CREATED)
+            return Response(BookingSerializer(booking).data, status=status.HTTP_201_CREATED)
         
+        logger.warning(f"Invalid booking data: {serializer.errors}")
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class UserBookingsView(generics.ListAPIView):
