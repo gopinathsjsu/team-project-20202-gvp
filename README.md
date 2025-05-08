@@ -17,12 +17,25 @@
 ## Architecture Diagrams
 
 The architecture of our restaurant reservation system follows a modern client-server model:
+
 ### Component Diagram
 ![Component Diagram](Architecture/ComponentDiagram.png)
+
 ### Deployment Diagram
 ![Deployment Diagram](Architecture/DeploymentDiagram.jpg)
+
 ### Database Schema
 ![Database Schema](Architecture/DbSchema.png)
+
+### Deployment Screenshots
+
+#### Auto Scaling Group Policy (AWS)
+![Scaling](Architecture/Scaling.png)
+This screenshot shows the AWS Auto Scaling group configuration, where the group automatically adjusts the number of running instances based on average CPU utilization, with a target value of 50% and a minimum/maximum capacity range. This ensures efficient resource usage and high availability under varying loads.
+
+#### Load Balancer Resource Mapping (AWS)
+![Resource Mapping](Architecture/Resource_mapping.png)
+This diagram illustrates the AWS Application Load Balancer setup, mapping HTTP traffic to a target group of EC2 instances. The load balancer distributes incoming requests to multiple backend instances, supporting scalability and fault tolerance.
 
 ## Technology Stack
 
