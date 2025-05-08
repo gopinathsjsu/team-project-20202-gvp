@@ -5,14 +5,18 @@ from restaurants.models import Restaurant
 
 class BookingSerializer(serializers.ModelSerializer):
     restaurant_id = serializers.SerializerMethodField()
+    slot_datetime = serializers.SerializerMethodField()
 
     class Meta:
         model = Booking
-        fields = ['booking_id', 'customer_id', 'slot_id', 'booking_datetime', 'number_of_people', 'status', 'restaurant_id']
-        read_only_fields = ['booking_id', 'customer_id', 'booking_datetime', 'restaurant_id']
+        fields = ['booking_id', 'customer_id', 'slot_id', 'booking_datetime', 'number_of_people', 'status', 'restaurant_id', 'slot_datetime']
+        read_only_fields = ['booking_id', 'customer_id', 'booking_datetime', 'restaurant_id', 'slot_datetime']
 
     def get_restaurant_id(self, obj):
         return obj.slot_id.restaurant_id.restaurant_id
+
+    def get_slot_datetime(self, obj):
+        return obj.slot_id.slot_datetime
 
 class BookingCreateSerializer(serializers.ModelSerializer):
     class Meta:

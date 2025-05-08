@@ -222,7 +222,7 @@ const Navbar = () => {
                   Profile
                 </button>
               </Link>
-              {user?.role === 'user' && (
+              {user?.role === 'Customer' && (
                 <Link href="/my-bookings">
                   <button className="flex items-center px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-md text-slate-100">
                     <Clock className="w-4 h-4 mr-2" />

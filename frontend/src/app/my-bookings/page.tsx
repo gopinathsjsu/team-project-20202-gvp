@@ -34,6 +34,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { getApiUrl } from "@/lib/config";
+import Link from "next/link";
 
 interface Booking {
   booking_id: number;
@@ -43,6 +44,7 @@ interface Booking {
   number_of_people: number;
   status: string;
   restaurant_id: number;
+  slot_datetime: string;
 }
 
 interface Restaurant {
@@ -263,7 +265,15 @@ export default function MyBookingsPage() {
                     <div className="flex items-center">
                       <Clock size={18} className="mr-2 text-primary" />
                       <div>
-                        <p className="font-medium">Booking Time</p>
+                        <p className="font-medium">Reservation Time</p>
+                        <p className="text-sm text-gray-600">{formatDateTime(booking.slot_datetime)}</p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center">
+                      <Calendar size={18} className="mr-2 text-primary" />
+                      <div>
+                        <p className="font-medium">Booking Made On</p>
                         <p className="text-sm text-gray-600">{formatDateTime(booking.booking_datetime)}</p>
                       </div>
                     </div>
