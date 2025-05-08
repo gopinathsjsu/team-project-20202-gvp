@@ -13,6 +13,10 @@ from django.db.models import Avg, Count
 from datetime import datetime, timedelta
 import pytz
 from rest_framework.exceptions import ValidationError
+import logging
+
+# Get logger for restaurants app
+logger = logging.getLogger('restaurants')
 
 # Custom permission to restrict access to RestaurantManagers
 class IsRestaurantManager(permissions.BasePermission):
@@ -26,7 +30,9 @@ class RestaurantCreateView(generics.CreateAPIView):
     authentication_classes = [JWTAuthentication]
 
     def perform_create(self, serializer):
+        logger.info(f"Creating new restaurant for manager: {self.request.user.username}")
         serializer.save(manager_id=self.request.user)
+        logger.info(f"Restaurant created successfully for manager: {self.request.user.username}")
 
 class RestaurantUpdateView(generics.UpdateAPIView):
     serializer_class = RestaurantFullSerializer
@@ -39,7 +45,9 @@ class RestaurantUpdateView(generics.UpdateAPIView):
     def get_object(self):
         restaurant_id = self.request.data.get('restaurant_id')
         if not restaurant_id:
+            logger.error(f"Restaurant update failed: restaurant_id not provided by user {self.request.user.username}")
             raise ValidationError({'restaurant_id': 'This field is required'})
+        logger.info(f"Updating restaurant {restaurant_id} for manager: {self.request.user.username}")
         return get_object_or_404(self.get_queryset(), restaurant_id=restaurant_id)
 
 class RestaurantListView(generics.ListAPIView):
@@ -48,17 +56,23 @@ class RestaurantListView(generics.ListAPIView):
     permission_classes = [AllowAny]
     authentication_classes = [JWTAuthentication]
 
+    def list(self, request, *args, **kwargs):
+        logger.info("Listing all restaurants")
+        return super().list(request, *args, **kwargs)
+
 class RestaurantTimeSlotsView(APIView):
     permission_classes = [AllowAny]
     authentication_classes = [JWTAuthentication]
 
     def get(self, request, restaurant_id):
+        logger.info(f"Fetching time slots for restaurant {restaurant_id}")
         # Get search parameters
         date_str = request.query_params.get('date')
         time_str = request.query_params.get('time')
         num_people = request.query_params.get('people')
 
         if not all([date_str, time_str, num_people]):
+            logger.warning(f"Missing required parameters for restaurant {restaurant_id}")
             return Response({
                 'error': 'Date, time, and number of people are required parameters'
             }, status=status.HTTP_400_BAD_REQUEST)
@@ -69,6 +83,7 @@ class RestaurantTimeSlotsView(APIView):
             search_datetime = pytz.UTC.localize(search_datetime)
             num_people = int(num_people)
         except ValueError:
+            logger.error(f"Invalid date/time format for restaurant {restaurant_id}: {date_str} {time_str}")
             return Response({
                 'error': 'Invalid date/time format. Use YYYY-MM-DD for date and HH:MM for time'
             }, status=status.HTTP_400_BAD_REQUEST)
@@ -77,6 +92,7 @@ class RestaurantTimeSlotsView(APIView):
         try:
             restaurant = Restaurant.objects.get(restaurant_id=restaurant_id, approved=True)
         except Restaurant.DoesNotExist:
+            logger.error(f"Restaurant not found: {restaurant_id}")
             return Response({
                 'error': 'Restaurant not found'
             }, status=status.HTTP_404_NOT_FOUND)
@@ -91,6 +107,7 @@ class RestaurantTimeSlotsView(APIView):
         ).first()
         
         if not hours:
+            logger.warning(f"Restaurant {restaurant_id} is closed on {day_of_week}")
             return Response({
                 'error': 'Restaurant is closed on this day'
             }, status=status.HTTP_400_BAD_REQUEST)
@@ -101,6 +118,7 @@ class RestaurantTimeSlotsView(APIView):
         close_time = pytz.UTC.localize(close_time)
         
         if not (open_time <= search_datetime <= close_time):
+            logger.warning(f"Restaurant {restaurant_id} is not open at {search_datetime}")
             return Response({
                 'error': 'Restaurant is not open at this time'
             }, status=status.HTTP_400_BAD_REQUEST)
@@ -139,6 +157,7 @@ class RestaurantTimeSlotsView(APIView):
                         if booked_tables < slot.total_tables:
                             time_slots.append({"time" : slot_time.strftime("%H:%M") , "id" : slot.slot_id})
 
+        logger.info(f"Found {len(time_slots)} available time slots for restaurant {restaurant_id}")
         return Response({
             'restaurant_id': restaurant.restaurant_id,
             'name': restaurant.name,
