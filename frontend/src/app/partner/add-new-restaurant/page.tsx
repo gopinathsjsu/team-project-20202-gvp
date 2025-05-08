@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
 import Script from "next/script";
+import { useRouter } from "next/navigation";
 import { ProtectedRoute } from "../components/ProtectedRoute";
 import { useAuth } from "@/context/AuthContext";
 import { getApiUrl } from "@/lib/config";
@@ -111,6 +112,7 @@ export default function AddNewRestaurantPage() {
   const [mapsLoaded, setMapsLoaded] = useState(false);
   const [mapError, setMapError] = useState<string | null>(null);
   const { user ,tokens} = useAuth();
+  const router = useRouter();
   // Maps API key and loading state
   const googleMapsApiKey = typeof process !== 'undefined' && process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || null;
   
@@ -352,7 +354,8 @@ export default function AddNewRestaurantPage() {
       const result = await response.json();
       console.log("Restaurant created successfully:", result);
       alert("Restaurant registration submitted successfully!");
-      // Redirect or show success message
+      // Redirect to partner dashboard
+      router.push("/partner/dashboard");
     } catch (error) {
       console.error("Failed to submit restaurant data:", error);
       alert("Failed to submit restaurant data. Please try again.");
