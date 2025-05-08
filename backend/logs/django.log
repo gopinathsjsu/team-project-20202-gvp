@@ -633,3 +633,5 @@ INFO 2025-05-08 16:28:43,192 basehttp 73872 6123253760 "POST /api/token/refresh/
 INFO 2025-05-08 16:28:45,302 basehttp 73872 6156906496 "GET /api/restaurants/hot/?page=1&pageSize=12 HTTP/1.1" 200 2960
 INFO 2025-05-08 16:28:46,223 basehttp 73872 6123253760 "POST /api/token/refresh/ HTTP/1.1" 200 241
 INFO 2025-05-08 16:28:48,435 basehttp 73872 6156906496 "GET /api/restaurants/hot/?page=1&pageSize=12 HTTP/1.1" 200 2960
+INFO 2025-05-08 16:31:59,120 autoreload 74524 8483818624 Watching for file changes with StatReloader
+INFO 2025-05-08 16:32:17,270 basehttp 74524 6169096192 "GET /api/restaurants/my-restaurants/ HTTP/1.1" 200 14358
