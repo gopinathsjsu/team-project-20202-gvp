@@ -34,7 +34,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { getApiUrl } from "@/lib/config";
-import Link from "next/link";
+// import Link from "next/link";
 
 interface Booking {
   booking_id: number;
