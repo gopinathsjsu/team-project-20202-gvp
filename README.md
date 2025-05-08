@@ -17,11 +17,11 @@
 ## Architecture Diagrams
 
 The architecture of our restaurant reservation system follows a modern client-server model:
-
+### Component Diagram
 ![Component Diagram](Architecture/ComponentDiagram.png)
-
+### Deployment Diagram
 ![Deployment Diagram](Architecture/DeploymentDiagram.jpg)
-
+### Database Schema
 ![Database Schema](Architecture/DbSchema.png)
 
 ## Technology Stack
