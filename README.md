@@ -6,6 +6,30 @@
 - Vedant Tushar Mehta - 018207436
 - Aarav Pranav Shah - 018211544
 
+## Component Ownership
+
+Each team member is responsible for specific components of the project:
+
+- **Neel Asheshbhai Shah**: 
+  - Frontend architecture
+  - User interface components
+  - Reservation management UI
+  - Frontend-backend integration
+
+- **Vedant Tushar Mehta**: 
+  - Backend architecture
+  - Database schema design
+  - Authentication system
+  - API development
+  - Deployment configuration
+
+- **Aarav Pranav Shah**: 
+  - Restaurant and review APIs
+  - Search and filtering functionality
+  - Testing and quality assurance
+  - Data validation and security
+  - Deployment on GCP
+
 ## Project Documentation
 
 - [Project Journal](https://docs.google.com/document/d/1TS9NoRIwt4UId85oS87dC9UE69MNtO2Z9WSfPYzfORA/edit?usp=sharing) - Contains detailed documentation of the project's progress, decisions, and milestones throughout the development cycle.
@@ -164,28 +188,7 @@ The project was designed with the following key principles in mind:
 
 2. The frontend will be available at `http://localhost:3000/`
 
-## Component Ownership
 
-Each team member is responsible for specific components of the project:
-
-- **Neel Asheshbhai Shah**: 
-  - Frontend architecture
-  - User interface components
-  - Reservation management UI
-  - Frontend-backend integration
-
-- **Vedant Tushar Mehta**: 
-  - Backend architecture
-  - Database schema design
-  - Authentication system
-  - API development
-  - Deployment configuration
-
-- **Aarav Pranav Shah**: 
-  - Restaurant and review APIs
-  - Search and filtering functionality
-  - Testing and quality assurance
-  - Data validation and security
 
 [![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-22041afd0340ce965d47ae6ef1cefeee28c7c493a6346c4f15d667ab976d596c.svg)](https://classroom.github.com/a/5Qp4_Wqy)
 
