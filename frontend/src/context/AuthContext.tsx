@@ -1,6 +1,7 @@
 "use client";
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { useRouter } from "next/navigation";
+import { getApiUrl } from "@/lib/config";
 
 // Define user interface based on your backend response
 interface User {
@@ -104,7 +105,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       // Implement token refresh logic here
       // This is a placeholder - you would call your API to refresh the token
-      const response = await fetch("http://192.168.1.115:8000/api/token/refresh/", {
+      const response = await fetch(getApiUrl("token/refresh/"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -159,7 +160,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const login = async (username: string, password: string) => {
     try {
-      const response = await fetch("http://192.168.1.115:8000/api/users/login/", {
+      const response = await fetch(getApiUrl("users/login/"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -194,7 +195,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signup = async (userData: { username: string; email: string; password: string; role: string }) => {
     try {
-      const response = await fetch("http://192.168.1.115:8000/api/users/register/", {
+      const response = await fetch(getApiUrl("users/register/"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

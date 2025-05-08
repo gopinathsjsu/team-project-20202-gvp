@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,8 @@ import Script from "next/script";
 import { ProtectedRoute } from "../../components/ProtectedRoute";
 import { useAuth } from "@/context/AuthContext";
 import { useParams, useRouter } from "next/navigation";
+import { getApiUrl } from "@/lib/config";
+import Image from "next/image";
 
 // Google Maps specific types
 interface GoogleMapMouseEvent {
@@ -21,6 +23,13 @@ interface GoogleMapMouseEvent {
 
 interface GoogleMap {
   addListener: (event: string, callback: (e: GoogleMapMouseEvent) => void) => void;
+}
+
+// Restaurant photo interface
+interface ExistingPhoto {
+  photo_url: string;
+  caption?: string;
+  toDelete?: boolean;
 }
 
 // Restaurant form interface
@@ -49,6 +58,7 @@ interface RestaurantForm {
   // Location & Photos
   location: { lat: number; lng: number } | null;
   photos: File[];
+  existingPhotos: ExistingPhoto[];
 }
 
 declare global {
@@ -107,7 +117,8 @@ export default function EditRestaurantPage() {
     days_open: [],
     table_sizes: [],
     location: null,
-    photos: []
+    photos: [],
+    existingPhotos: []
   });
   
   const mapRef = useRef<HTMLDivElement>(null);
@@ -123,11 +134,10 @@ export default function EditRestaurantPage() {
     const fetchRestaurantData = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`http://192.168.1.115:8000/api/restaurants/${restaurantId}/`, {
-         
+        const response = await fetch(getApiUrl(`restaurants/${restaurantId}/`), {
           headers: {
-            'Authorization': `Bearer ${tokens?.access}`
-          }
+            Authorization: `Bearer ${tokens?.access}`,
+          },
         });
         
         if (!response.ok) {
@@ -155,7 +165,8 @@ export default function EditRestaurantPage() {
             lat: parseFloat(restaurantData.latitude),
             lng: parseFloat(restaurantData.longitude)
           } : null,
-          photos: []
+          photos: [],
+          existingPhotos: restaurantData.photos ? restaurantData.photos.map((url: string) => ({ photo_url: url })) : []
         });
         
         setLoading(false);
@@ -277,44 +288,119 @@ export default function EditRestaurantPage() {
     setStep(prev => prev - 1);
   };
   
+  // Handle photo upload for new photos
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const filesArray = Array.from(e.target.files);
+      setFormData((prev) => ({
+        ...prev,
+        photos: [...prev.photos, ...filesArray]
+      }));
+    }
+  };
+  
+  // Handle deletion of a new photo
+  const handleDeleteNewPhoto = (index: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      photos: prev.photos.filter((_, i) => i !== index)
+    }));
+  };
+  
+  // Handle toggling deletion of an existing photo
+  const handleToggleExistingPhoto = (index: number) => {
+    setFormData((prev) => {
+      const updatedPhotos = [...prev.existingPhotos];
+      updatedPhotos[index] = {
+        ...updatedPhotos[index],
+        toDelete: !updatedPhotos[index].toDelete
+      };
+      return {
+        ...prev,
+        existingPhotos: updatedPhotos
+      };
+    });
+  };
+  
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Validate location data
-    if (step === 4 && !formData.location) {
-      alert("Please go back and set your restaurant's location before submitting.");
+    if (!formData.location) {
+      setMapError("Please select a location on the map");
       return;
     }
     
     try {
-      // Only update fields that can be logically edited
-      const updateData = {
-        name: formData.name,
-        cuisine_type: formData.cuisine_type,
-        cost_rating: formData.cost_rating,
-        description: formData.description,
-        address: formData.address,
-        city: formData.city,
-        state: formData.state,
-        zipcode: formData.zipcode,
-        contact_info: formData.contact_info,
-        latitude: formData.location?.lat.toString(),
-        longitude: formData.location?.lng.toString(),
-        opening_time: formData.opening_time,
-        closing_time: formData.closing_time,
-        days_open: formData.days_open
-      };
+      // Create a FormData instance to handle file uploads
+      const formDataToSend = new FormData();
       
-      const response = await fetch(`http://192.168.1.115:8000/api/restaurants/update/`, {
+      // Add restaurant ID
+      formDataToSend.append('restaurant_id', restaurantId);
+      
+      // Add basic info
+      formDataToSend.append('name', formData.name);
+      formDataToSend.append('cuisine_type', formData.cuisine_type);
+      formDataToSend.append('cost_rating', formData.cost_rating.toString());
+      formDataToSend.append('description', formData.description);
+      
+      // Add contact & address info
+      formDataToSend.append('address', formData.address);
+      formDataToSend.append('city', formData.city);
+      formDataToSend.append('state', formData.state);
+      formDataToSend.append('zipcode', formData.zipcode);
+      formDataToSend.append('contact_info', formData.contact_info);
+      
+      // Add hours & days
+      formDataToSend.append('opening_time', formData.opening_time);
+      formDataToSend.append('closing_time', formData.closing_time);
+      formData.days_open.forEach(day => {
+        formDataToSend.append('days_open', day);
+      });
+      
+      // Add location data as separate keys (not as a location object)
+      if (formData.location) {
+        formDataToSend.append('location_lat', formData.location.lat.toString());
+        formDataToSend.append('location_lng', formData.location.lng.toString());
+      }
+      
+      // Add new photos directly
+      formData.photos.forEach(photo => {
+        formDataToSend.append('photos', photo);
+      });
+      
+      // Filter and add existing photos that should be kept (not marked for deletion)
+      // We'll need to fetch them as binary data first
+      const existingPhotosToKeep = formData.existingPhotos.filter(photo => !photo.toDelete);
+      
+      // We need to use Promise.all to wait for all downloads to complete
+      const downloadPromises = existingPhotosToKeep.map(async (photo) => {
+        try {
+          // Fetch the image as a blob
+          const response = await fetch(photo.photo_url);
+          const blob = await response.blob();
+          
+          // Create a file from the blob with a proper filename
+          const filename = photo.photo_url.split('/').pop() || `existing-photo-${Date.now()}.jpg`;
+          const file = new File([blob], filename, { type: blob.type });
+          
+          // Add the file to FormData
+          formDataToSend.append('photos', file);
+        } catch (error) {
+          console.error(`Failed to download existing photo: ${photo.photo_url}`, error);
+        }
+      });
+      
+      // Wait for all downloads to complete before submitting
+      await Promise.all(downloadPromises);
+      
+      const response = await fetch(getApiUrl(`restaurants/update/`), {
         method: 'PUT',
-        body: JSON.stringify({
-          ...updateData,
-          restaurant_id: restaurantId
-        }),
+        body: formDataToSend,
         headers: {
-          'Content-Type': 'application/json',
           'Authorization': `Bearer ${tokens?.access}`
+          // Don't set 'Content-Type' header, the browser will set it with the correct boundary for FormData
         }
       });
       
@@ -366,7 +452,7 @@ export default function EditRestaurantPage() {
         {/* Progress indicator */}
         <div className="flex justify-center mb-8">
           <div className="flex space-x-3 items-center">
-            {[1, 2, 3, 4].map((stepNumber) => (
+            {[1, 2, 3, 4, 5].map((stepNumber) => (
               <div key={stepNumber} className="flex items-center">
                 <button
                   onClick={() => stepNumber < step && setStep(stepNumber)}
@@ -381,7 +467,7 @@ export default function EditRestaurantPage() {
                 >
                   {stepNumber}
                 </button>
-                {stepNumber < 4 && (
+                {stepNumber < 5 && (
                   <div 
                     className={cn(
                       "w-10 h-0.5 mx-1", 
@@ -402,13 +488,15 @@ export default function EditRestaurantPage() {
                   {step === 1 && "Basic Restaurant Information"}
                   {step === 2 && "Contact & Location"}
                   {step === 3 && "Map Location"}
-                  {step === 4 && "Review & Submit"}
+                  {step === 4 && "Restaurant Photos"}
+                  {step === 5 && "Review & Submit"}
                 </CardTitle>
                 <CardDescription>
                   {step === 1 && "Update information about your restaurant"}
                   {step === 2 && "Update contact and location details"}
                   {step === 3 && "Update your location on the map"}
-                  {step === 4 && "Review and submit your changes"}
+                  {step === 4 && "Update your restaurant photos"}
+                  {step === 5 && "Review and submit your changes"}
                 </CardDescription>
               </CardHeader>
               
@@ -662,12 +750,97 @@ export default function EditRestaurantPage() {
                     </div>
                   )}
                   
-                  {/* Step 4: Review & Submit */}
+                  {/* Step 4: Restaurant Photos */}
                   {step === 4 && (
+                    <div className="space-y-4">
+                      {/* Existing Photos Section */}
+                      {formData.existingPhotos.length > 0 && (
+                        <div className="grid gap-3">
+                          <Label>Existing Photos</Label>
+                          <p className="text-sm text-muted-foreground">These photos are currently associated with your restaurant.</p>
+                          <p className="text-sm text-amber-600 font-medium">To delete a photo, click on it to mark for deletion (photos are only removed after you submit the form).</p>
+                          
+                          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-2">
+                            {formData.existingPhotos.map((photo, index) => (
+                              <div 
+                                key={index} 
+                                className={cn(
+                                  "relative h-40 rounded-md overflow-hidden cursor-pointer border-2",
+                                  photo.toDelete ? "border-red-500 opacity-50" : "border-transparent hover:border-blue-300"
+                                )}
+                                onClick={() => handleToggleExistingPhoto(index)}
+                              >
+                                <Image
+                                  src={photo.photo_url}
+                                  alt={`Restaurant photo ${index + 1}`}
+                                  fill
+                                  className="object-cover"
+                                />
+                                {photo.toDelete && (
+                                  <div className="absolute inset-0 flex items-center justify-center bg-red-500 bg-opacity-20">
+                                    <span className="bg-red-500 text-white px-2 py-1 rounded text-sm">Marked for deletion</span>
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* New Photos Section */}
+                      <div className="grid gap-3 mt-6">
+                        <Label htmlFor="new-photos">Upload New Photos</Label>
+                        <p className="text-sm text-muted-foreground">Add new high-quality photos of your restaurant, food, and ambiance</p>
+                        <p className="text-xs text-amber-600 font-medium">Note: Only PNG, JPEG, and JPG file formats are accepted.</p>
+                        <Input
+                          id="new-photos"
+                          name="new-photos"
+                          type="file"
+                          multiple
+                          accept="image/png, image/jpeg, image/jpg"
+                          onChange={handlePhotoUpload}
+                          className="py-2"
+                        />
+                        
+                        {/* Display new photos */}
+                        {formData.photos.length > 0 && (
+                          <div className="mt-4">
+                            <p>New photos to upload: {formData.photos.length}</p>
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-2">
+                              {Array.from(formData.photos).map((photo, index) => (
+                                <div key={index} className="relative h-40 rounded-md overflow-hidden group">
+                                  <Image
+                                    src={URL.createObjectURL(photo)}
+                                    alt={`New restaurant photo ${index + 1}`}
+                                    fill
+                                    className="object-cover"
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDeleteNewPhoto(index)}
+                                    className="absolute top-2 right-2 bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                                    aria-label="Delete photo"
+                                  >
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                      <path d="M18 6L6 18M6 6l12 12"></path>
+                                    </svg>
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Step 5: Review & Submit */}
+                  {step === 5 && (
                     <div className="space-y-4">
                       <div className="grid gap-3">
                         <h3 className="text-lg font-semibold">Review your changes</h3>
                         <div className="border rounded-md p-4 divide-y">
+                          {/* Existing review fields */}
                           <div className="py-2">
                             <p className="font-medium">Restaurant Name:</p>
                             <p>{formData.name}</p>
@@ -708,6 +881,12 @@ export default function EditRestaurantPage() {
                             <p className="font-medium">Location (Lat, Lng):</p>
                             <p>{formData.location ? `${formData.location.lat.toFixed(6)}, ${formData.location.lng.toFixed(6)}` : 'Not set'}</p>
                           </div>
+                          
+                          {/* Photo review section */}
+                          <div className="py-2">
+                            <p className="font-medium">Photos:</p>
+                            <p>{formData.existingPhotos.filter(p => !p.toDelete).length} existing photos kept, {formData.existingPhotos.filter(p => p.toDelete).length} marked for deletion, {formData.photos.length} new photos to upload</p>
+                          </div>
                         </div>
                       </div>
                       
@@ -740,7 +919,7 @@ export default function EditRestaurantPage() {
                       <div></div>
                     )}
                     
-                    {step < 4 ? (
+                    {step < 5 ? (
                       <Button
                         type="button"
                         onClick={nextStep}

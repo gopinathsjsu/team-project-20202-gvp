@@ -1,20 +1,26 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { memo } from "react";
 
-export default function RestaurantCard({restaurantID, imageURL, name, cuisine, rating, ratePerPerson}: {
+const RestaurantCard = ({restaurantID, imageURL, name, cuisine, rating, ratePerPerson}: {
     restaurantID: string,
     imageURL: string,
     name: string,
     cuisine: string, 
     rating: number, 
     ratePerPerson: number
-}) {
+}) => {
     const router = useRouter();
     
     const handleClick = () => {
         router.push(`/view-restaurant/${restaurantID}`);
     };
-    console.log(restaurantID)
+    const imageList =[
+        "https://upload.wikimedia.org/wikipedia/commons/a/a3/Image-not-found.png?20210521171500"
+    ];
+    
+    // Use a random image from imageList if imageURL is empty
+    const displayImageURL : string  =  imageURL?.length === 0 ? imageList[Math.floor(Math.random() * imageList.length)]:imageURL;
     
     return (
         <div 
@@ -23,7 +29,7 @@ export default function RestaurantCard({restaurantID, imageURL, name, cuisine, r
         >
             <div className="">
                 <div className="relative w-full h-48 mb-2">
-                    <Image src={imageURL} alt="Restaurant" fill className="object-cover rounded-t-lg " />
+                    <Image src={displayImageURL} alt="Restaurant" fill className="object-cover rounded-t-lg " />
                 </div>
                 <h2 className="px-3 text-xl font-semibold text-slate-900 mb-2">{name}</h2>
                 <div className="flex items-center justify-between px-4 pb-2">
@@ -34,3 +40,5 @@ export default function RestaurantCard({restaurantID, imageURL, name, cuisine, r
         </div>  
     )
 }
+
+export default memo(RestaurantCard);

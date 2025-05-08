@@ -1,7 +1,7 @@
 // components/Navbar.tsx
 "use client";
-import { useState, useEffect, useRef } from "react";
-import { Search, Users, MapPin, ChevronDown, LogOut, User } from "lucide-react";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { Search, Users, MapPin, ChevronDown, LogOut, User, Clock } from "lucide-react";
 import Link from "next/link";
 import DateSelector from "./ui/DateSelector";
 import { usePathname } from "next/navigation";
@@ -27,6 +27,22 @@ const cities = [
   "San Jose"
 ];
 
+// Time slots for reservation
+const timeSlots = [
+  "11:00 AM", "11:30 AM", 
+  "12:00 PM", "12:30 PM", 
+  "1:00 PM", "1:30 PM", 
+  "2:00 PM", "2:30 PM", 
+  "3:00 PM", "3:30 PM", 
+  "4:00 PM", "4:30 PM", 
+  "5:00 PM", "5:30 PM", 
+  "6:00 PM", "6:30 PM", 
+  "7:00 PM", "7:30 PM", 
+  "8:00 PM", "8:30 PM", 
+  "9:00 PM", "9:30 PM", 
+  "10:00 PM"
+];
+
 const Navbar = () => {
   const { user, isAuthenticated, logout } = useAuth();
   const pathname = usePathname();
@@ -37,9 +53,12 @@ const Navbar = () => {
 
   const [isPeopleDropdownOpen, setIsPeopleDropdownOpen] = useState(false);
   const [isLocationDropdownOpen, setIsLocationDropdownOpen] = useState(false);
+  const [isTimeDropdownOpen, setIsTimeDropdownOpen] = useState(false);
   
   const locationDropdownRef = useRef<HTMLDivElement>(null);
   const locationButtonRef = useRef<HTMLButtonElement>(null);
+  const timeDropdownRef = useRef<HTMLDivElement>(null);
+  const timeButtonRef = useRef<HTMLButtonElement>(null);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -53,31 +72,57 @@ const Navbar = () => {
       ) {
         setIsLocationDropdownOpen(false);
       }
+      
+      if (
+        isTimeDropdownOpen &&
+        timeDropdownRef.current && 
+        !timeDropdownRef.current.contains(event.target as Node) &&
+        timeButtonRef.current &&
+        !timeButtonRef.current.contains(event.target as Node)
+      ) {
+        setIsTimeDropdownOpen(false);
+      }
     };
 
     document.addEventListener("mousedown", handleClickOutside);
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [isLocationDropdownOpen]);
+  }, [isLocationDropdownOpen, isTimeDropdownOpen]);
 
-  const handlePeopleSelect = (count: number) => {
-    setSearchState({
-      ...searchState,
+  // Use useCallback for handlers to prevent unnecessary re-renders
+  const handlePeopleSelect = useCallback((count: number) => {
+    setSearchState(prevState => ({
+      ...prevState,
       people: count,
-    });
+    }));
     setIsPeopleDropdownOpen(false);
-  };
+  }, [setSearchState]);
 
-  const handleLocationSelect = (city: string) => {
-    setSearchState({
-      ...searchState,
+  const handleLocationSelect = useCallback((city: string) => {
+    setSearchState(prevState => ({
+      ...prevState,
       location: city,
-    });
+    }));
     setIsLocationDropdownOpen(false);
-  };
+  }, [setSearchState]);
+  
+  const handleTimeSelect = useCallback((time: string) => {
+    setSearchState(prevState => ({
+      ...prevState,
+      time: time,
+    }));
+    setIsTimeDropdownOpen(false);
+  }, [setSearchState]);
 
-  const searchForLocation = () => {
+  const handleSearchQueryChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchState(prevState => ({
+      ...prevState,
+      searchQuery: e.target.value,
+    }));
+  }, [setSearchState]);
+
+  const searchForLocation = useCallback(() => {
     // Implement location search functionality
     console.log("Searching for location:", searchState.location);
     // Get user's location and update the location city
@@ -96,10 +141,10 @@ const Navbar = () => {
                 const city = data.features[0].properties.city || data.features[0].properties.town;
                 console.log(city)
                 if (city) {
-                  setSearchState({
-                    ...searchState,
+                  setSearchState(prevState => ({
+                    ...prevState,
                     location: city
-                  });
+                  }));
                 }
               }
             } catch (error) {
@@ -114,8 +159,7 @@ const Navbar = () => {
     };
     
     getUserLocation();
-  };
- 
+  }, [searchState.location, setSearchState]);
 
   const peopleOptions = Array.from({ length: 15 }, (_, i) => i + 1);
 
@@ -134,18 +178,20 @@ const Navbar = () => {
             </div>
           </Link>
 
-          <button
-            ref={locationButtonRef}
-            className="flex items-center text-slate-300 hover:text-slate-400 cursor-pointer"
-            onClick={() => setIsLocationDropdownOpen(!isLocationDropdownOpen)}
-          >
-            <MapPin className="w-4 h-4 mr-1" />
-            <span>{searchState.location}</span>
-            <ChevronDown className="w-4 h-4 ml-1" />
-          </button>
+          {currentPage !== "login" && currentPage !== "signup" && (
+            <button
+              ref={locationButtonRef}
+              className="flex items-center text-slate-300 hover:text-slate-400 cursor-pointer"
+              onClick={() => setIsLocationDropdownOpen(!isLocationDropdownOpen)}
+            >
+              <MapPin className="w-4 h-4 mr-1" />
+              <span>{searchState.location}</span>
+              <ChevronDown className="w-4 h-4 ml-1" />
+            </button>
+          )}
           
           {/* Simplified location selector popup */}
-          {isLocationDropdownOpen && (
+          {isLocationDropdownOpen && currentPage !== "login" && currentPage !== "signup" && (
             <div 
               ref={locationDropdownRef}
               className="absolute top-10 left-0 z-50 bg-slate-900 rounded-md shadow-lg overflow-auto w-64 max-h-96"
@@ -176,6 +222,14 @@ const Navbar = () => {
                   Profile
                 </button>
               </Link>
+              {user?.role === 'user' && (
+                <Link href="/my-bookings">
+                  <button className="flex items-center px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-md text-slate-100">
+                    <Clock className="w-4 h-4 mr-2" />
+                    My Bookings
+                  </button>
+                </Link>
+              )}
               <button 
                 onClick={logout}
                 className="flex items-center px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-md text-slate-100"
@@ -211,13 +265,36 @@ const Navbar = () => {
                 setSearchState={setSearchState}
               ></DateSelector>
 
-              <div className="w-full sm:w-auto flex-shrink-0">
-                <button className="w-full sm:w-auto bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded-md flex items-center justify-between border border-slate-700">
+              <div className="w-full sm:w-auto flex-shrink-0 relative">
+                <button
+                  ref={timeButtonRef}
+                  className="w-full sm:w-auto bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded-md flex items-center justify-between border border-slate-700"
+                  onClick={() => setIsTimeDropdownOpen(!isTimeDropdownOpen)}
+                >
                   <div className="flex items-center">
-                    <span className="text-slate-500">7:00 PM</span>
+                    <Clock className="w-4 h-4 mr-2 text-slate-500" />
+                    <span className="text-slate-300">{searchState.time || "7:00 PM"}</span>
                   </div>
                   <ChevronDown className="w-4 h-4 ml-2" />
                 </button>
+                
+                {/* Time dropdown */}
+                {isTimeDropdownOpen && (
+                  <div 
+                    ref={timeDropdownRef}
+                    className="absolute z-10 mt-1 w-48 bg-slate-800 border border-slate-700 rounded-md shadow-lg max-h-60 overflow-auto"
+                  >
+                    {timeSlots.map((time) => (
+                      <div
+                        key={time}
+                        className="px-4 py-2 hover:bg-slate-700 cursor-pointer"
+                        onClick={() => handleTimeSelect(time)}
+                      >
+                        {time}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* Selecting number of people */}
@@ -261,6 +338,8 @@ const Navbar = () => {
                     type="text"
                     placeholder="Location, Restaurant, or Cuisine"
                     className="w-full bg-slate-800 hover:bg-slate-700 border border-slate-700 px-10 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-500 placeholder:text-slate-500"
+                    value={searchState.searchQuery || ''}
+                    onChange={handleSearchQueryChange}
                   />
                 </div>
               </div>
@@ -272,7 +351,7 @@ const Navbar = () => {
 
             <div className="mt-3 text-sm text-slate-400 flex justify-center sm:justify-start items-center">
               <span>It looks like you are in {searchState.location}. Not correct?</span>
-              <button className="flex items-center ml-2 text-slate-500 hover:text-slate-400 cursor-pointer" onClick={() => searchForLocation()}>
+              <button className="flex items-center ml-2 text-slate-500 hover:text-slate-400 cursor-pointer" onClick={searchForLocation}>
                 <MapPin className="w-4 h-4 mr-1" />
                 Get current location
               </button>

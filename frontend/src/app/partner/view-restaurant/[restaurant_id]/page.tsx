@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ProtectedRoute } from "@/app/partner/components/ProtectedRoute";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
+import { getApiUrl } from "@/lib/config";
 
 interface RestaurantForm {
   restaurant_id: number;
@@ -40,12 +41,11 @@ export default function ViewRestaurantPage() {
     console.log(tokens)
     const fetchRestaurant = async () => {
       try {
-        const response = await fetch(`http://192.168.1.115:8000/api/restaurants/${params.restaurant_id}/`, {
-          method: 'GET',
+        setLoading(true);
+        const response = await fetch(getApiUrl(`restaurants/${params.restaurant_id}/`), {
           headers: {
-            'contentType': 'application/json',
-            'Authorization': `Bearer ${tokens?.access}`
-          }
+            Authorization: `Bearer ${tokens?.access}`,
+          },
         });
 
         if (!response.ok) {
@@ -126,7 +126,7 @@ export default function ViewRestaurantPage() {
                 </div>
                 <div>
                   <h3 className="font-semibold">Cost Rating</h3>
-                  <p className="text-gray-600">{"$".repeat(restaurant.cost_rating)}</p>
+                  <p className="text-gray-600">{`$${restaurant.cost_rating}`}</p>
                 </div>
               </div>
             </CardContent>
