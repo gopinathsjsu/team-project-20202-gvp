@@ -185,6 +185,20 @@ class RestaurantDetailView(APIView):
         reviews = Review.objects.filter(restaurant_id=restaurant)
         avg_rating = reviews.aggregate(Avg('rating'))['rating__avg'] or 0
 
+        # Get restaurant hours
+        restaurant_hours = RestaurantHours.objects.filter(restaurant_id=restaurant)
+        days_open = [hour.day_of_week for hour in restaurant_hours]
+        
+        # Use the first operating hour entry to get opening and closing times
+        # This assumes all days have the same hours, which is a simplification
+        # Ideally, we'd return a structured object with hours for each day
+        opening_time = None
+        closing_time = None
+        if restaurant_hours.exists():
+            first_hour = restaurant_hours.first()
+            opening_time = first_hour.open_time
+            closing_time = first_hour.close_time
+
         # Format reviews
         formatted_reviews = []
         for review in reviews:
@@ -213,7 +227,11 @@ class RestaurantDetailView(APIView):
             'photos': photo_urls,
             'reviews': formatted_reviews,
             'description': restaurant.description,
-            'contact_info': restaurant.contact_info
+            'contact_info': restaurant.contact_info,
+            'days_open': days_open,
+            'opening_time': opening_time.strftime('%H:%M') if opening_time else '',
+            'closing_time': closing_time.strftime('%H:%M') if closing_time else '',
+            'approved': restaurant.approved
         }, status=status.HTTP_200_OK)
 
 class RestaurantSearchView(APIView):

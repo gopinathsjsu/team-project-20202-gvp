@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { Store } from "lucide-react";
 import Link from "next/link";
+import { getApiUrl } from "@/lib/config";
 
 import {
   Card,
@@ -15,9 +16,41 @@ import {
 import { Button } from "@/components/ui/button";
 
 export default function PartnerDashboard() {
-  const { user, isAuthenticated, isLoading } = useAuth();
+  const { user, isAuthenticated, isLoading, tokens } = useAuth();
   const router = useRouter();
-  const [restaurantCount] = useState<number>(0);
+  const [restaurantCount, setRestaurantCount] = useState<number>(0);
+  const [isCountLoading, setIsCountLoading] = useState<boolean>(true);
+
+  // Fetch restaurant count
+  useEffect(() => {
+    const fetchRestaurantCount = async () => {
+      if (!tokens?.access) return;
+      
+      try {
+        setIsCountLoading(true);
+        const response = await fetch(getApiUrl('restaurants/my-restaurants/'), {
+          headers: {
+            Authorization: `Bearer ${tokens.access}`,
+          },
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          setRestaurantCount(data.length);
+        } else {
+          console.error('Failed to fetch restaurants');
+        }
+      } catch (error) {
+        console.error('Error fetching restaurant count:', error);
+      } finally {
+        setIsCountLoading(false);
+      }
+    };
+    
+    if (isAuthenticated && tokens?.access) {
+      fetchRestaurantCount();
+    }
+  }, [isAuthenticated, tokens]);
 
   // Redirect if not authenticated or not a partner
   useEffect(() => {
@@ -60,7 +93,9 @@ export default function PartnerDashboard() {
               </div>
               <div className="flex flex-col space-y-1">
                 <span className="text-slate-400 text-sm">Total Restaurants</span>
-                <span className="text-slate-200">{restaurantCount}</span>
+                <span className="text-slate-200">
+                  {isCountLoading ? "Loading..." : restaurantCount}
+                </span>
               </div>
             </CardContent>
           </Card>
