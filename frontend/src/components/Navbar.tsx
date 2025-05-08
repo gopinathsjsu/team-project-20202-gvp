@@ -178,18 +178,20 @@ const Navbar = () => {
             </div>
           </Link>
 
-          <button
-            ref={locationButtonRef}
-            className="flex items-center text-slate-300 hover:text-slate-400 cursor-pointer"
-            onClick={() => setIsLocationDropdownOpen(!isLocationDropdownOpen)}
-          >
-            <MapPin className="w-4 h-4 mr-1" />
-            <span>{searchState.location}</span>
-            <ChevronDown className="w-4 h-4 ml-1" />
-          </button>
+          {currentPage !== "login" && currentPage !== "signup" && (
+            <button
+              ref={locationButtonRef}
+              className="flex items-center text-slate-300 hover:text-slate-400 cursor-pointer"
+              onClick={() => setIsLocationDropdownOpen(!isLocationDropdownOpen)}
+            >
+              <MapPin className="w-4 h-4 mr-1" />
+              <span>{searchState.location}</span>
+              <ChevronDown className="w-4 h-4 ml-1" />
+            </button>
+          )}
           
           {/* Simplified location selector popup */}
-          {isLocationDropdownOpen && (
+          {isLocationDropdownOpen && currentPage !== "login" && currentPage !== "signup" && (
             <div 
               ref={locationDropdownRef}
               className="absolute top-10 left-0 z-50 bg-slate-900 rounded-md shadow-lg overflow-auto w-64 max-h-96"
@@ -220,12 +222,14 @@ const Navbar = () => {
                   Profile
                 </button>
               </Link>
-              <Link href="/my-bookings">
-                <button className="flex items-center px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-md text-slate-100">
-                  <Clock className="w-4 h-4 mr-2" />
-                  My Bookings
-                </button>
-              </Link>
+              {user?.role === 'user' && (
+                <Link href="/my-bookings">
+                  <button className="flex items-center px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-md text-slate-100">
+                    <Clock className="w-4 h-4 mr-2" />
+                    My Bookings
+                  </button>
+                </Link>
+              )}
               <button 
                 onClick={logout}
                 className="flex items-center px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-md text-slate-100"
