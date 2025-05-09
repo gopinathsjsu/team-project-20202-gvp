@@ -276,10 +276,24 @@ class CreateBookingView(APIView):
             restaurant.save()
             
             logger.info(f"Booking created successfully: {booking.booking_id} for user {request.user.username}")
+
+            booking_details = {
+                'restaurant_name': restaurant.name,
+                'booking_date': slot.slot_datetime.strftime('%Y-%m-%d'),
+                'booking_time': slot.slot_datetime.strftime('%I:%M %p'),
+                'number_of_people': number_of_people,
+                'booking_id': booking.booking_id
+            }
+            
+            
             
             # Send confirmation email
             try:
-                send_booking_confirmation_email(booking)
+                send_booking_confirmation_email(
+                    user_email=request.user.email,
+                    user_name=request.user.username,
+                    booking_details=booking_details
+                )
                 logger.info(f"Confirmation email sent for booking {booking.booking_id}")
             except Exception as e:
                 logger.error(f"Failed to send confirmation email for booking {booking.booking_id}: {str(e)}")
